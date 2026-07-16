@@ -1,0 +1,824 @@
+<title>Ficha de Aventureiro — Dark Lord RPG</title>
+<style>
+  :root{
+    --bg:#0a0a0b;
+    --bg-raised:#171416;
+    --bg-sunken:#040404;
+    --ink:#ece6e2;
+    --ink-soft:#a89d97;
+    --ink-faint:#6e6360;
+    --accent:#c8202f;
+    --accent-glow:#c8202f66;
+    --accent-ink:#180506;
+    --accent-2:#e9e3dc;
+    --line:#2b1417;
+    --shadow: 0 1px 0 rgba(0,0,0,.7);
+    --font-display:'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,'Times New Roman',serif;
+    --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --font-mono:'SF Mono','Cascadia Mono','JetBrains Mono','Courier New',monospace;
+    --radius:3px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--font-body);
+    font-size:15px; line-height:1.45; -webkit-tap-highlight-color:transparent;
+  }
+  ::selection{ background:var(--accent); color:var(--accent-ink); }
+  h1,h2,h3{ font-family:var(--font-display); text-wrap:balance; margin:0; }
+  input,textarea,select,button{ font-family:inherit; color:inherit; }
+  input,textarea,select{
+    background:var(--bg-sunken); border:1px solid var(--line); border-radius:var(--radius);
+    color:var(--ink); padding:6px 8px; font-size:14px; width:100%;
+  }
+  input:focus,textarea:focus,select:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  textarea{ resize:vertical; min-height:64px; }
+  button{
+    background:var(--bg-sunken); border:1px solid var(--line); border-radius:var(--radius);
+    color:var(--ink); padding:7px 12px; cursor:pointer; font-size:13px;
+  }
+  button:hover{ border-color:var(--accent); }
+  button:focus-visible, a:focus-visible, [tabindex]:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  button.ghost{ background:transparent; }
+  button.small{ padding:4px 8px; font-size:12px; }
+  .label{
+    display:block; font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--ink-faint); margin-bottom:3px; font-weight:600;
+  }
+  .field{ display:flex; flex-direction:column; }
+  .row-flex{ display:flex; gap:10px; flex-wrap:wrap; }
+  .tabular{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+
+  .app{ max-width:1000px; margin:0 auto; padding:0 16px 90px; }
+
+  .masthead{ padding:22px 16px 14px; border-bottom:2px solid var(--accent); background:linear-gradient(180deg, var(--bg-raised), var(--bg)); box-shadow:0 6px 28px -14px var(--accent-glow); }
+  .masthead-inner{ max-width:1000px; margin:0 auto; }
+  .eyebrow{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+  .name-input{
+    font-family:var(--font-display); font-size:clamp(24px,5vw,36px); font-weight:700;
+    background:transparent; border:none; padding:2px 0; width:100%; border-bottom:1px dashed transparent;
+  }
+  .name-input:focus{ outline:none; border-bottom-color:var(--accent); }
+  .name-input::placeholder{ color:var(--ink-faint); opacity:.7; }
+  .id-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:14px; }
+  @media (max-width:760px){ .id-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (min-width:761px) and (max-width:980px){ .id-grid{ grid-template-columns:repeat(3,1fr); } }
+
+  .tabs{
+    display:flex; gap:2px; background:var(--bg-sunken); border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:5; overflow-x:auto; scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tab{
+    flex:0 0 auto; padding:12px 14px; font-size:12.5px; font-weight:600; letter-spacing:.02em;
+    color:var(--ink-soft); border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; user-select:none;
+  }
+  .tab[aria-selected="true"]{ color:var(--accent); border-bottom-color:var(--accent); }
+  .tab:hover{ color:var(--ink); }
+
+  .panel{ display:none; padding-top:20px; }
+  .panel.active{ display:block; }
+
+  .section-title{ font-family:var(--font-display); font-size:19px; font-weight:700; margin:26px 0 12px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .section-title:first-child{ margin-top:4px; }
+  .section-title .hint{ font-family:var(--font-body); font-size:11.5px; color:var(--ink-faint); font-weight:400; }
+
+  .card{ background:var(--bg-raised); border:1px solid var(--line); border-radius:6px; box-shadow:var(--shadow); }
+
+  .attr-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:10px; }
+  @media (max-width:720px){ .attr-grid{ grid-template-columns:repeat(3,1fr); } }
+  .attr-card{ padding:12px 8px; text-align:center; }
+  .attr-card .label{ margin-bottom:8px; }
+  .attr-card input{ text-align:center; font-family:var(--font-mono); font-size:16px; width:56px; margin:0 auto 8px; }
+  .attr-mod{ font-family:var(--font-mono); font-size:26px; font-weight:700; color:var(--accent); line-height:1; }
+  .attr-mod-label{ font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin-top:2px; }
+
+  .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:14px; }
+  @media (max-width:720px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+  .stat-card{ padding:12px; }
+  .stat-card .big{ font-family:var(--font-mono); font-size:24px; font-weight:700; }
+  .stat-card .pair{ display:flex; align-items:center; gap:6px; }
+  .stat-card .pair input{ width:56px; text-align:center; font-family:var(--font-mono); }
+  .stat-card .sep{ color:var(--ink-faint); }
+  .bar-track{ height:7px; background:var(--bg-sunken); border-radius:5px; margin-top:8px; overflow:hidden; border:1px solid var(--line); }
+  .bar-fill{ height:100%; background:var(--accent); transition:width .2s; }
+  .bar-fill.pm{ background:var(--accent-2); }
+  .stat-card.hero .big{ color:var(--accent); }
+
+  .formula-card{ padding:14px; }
+  .formula-row{ display:flex; align-items:flex-end; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .formula-row .total-box{
+    font-family:var(--font-mono); font-size:22px; font-weight:700; color:var(--accent);
+    background:var(--bg-sunken); border:1px solid var(--accent); border-radius:6px;
+    padding:6px 12px; min-width:52px; text-align:center;
+    box-shadow:0 0 14px var(--accent-glow);
+  }
+  .formula-row .op{ color:var(--ink-faint); font-size:15px; padding-bottom:9px; }
+  .formula-term{ display:flex; flex-direction:column; align-items:center; min-width:58px; }
+  .formula-term input, .formula-term .const{
+    width:58px; text-align:center; font-family:var(--font-mono);
+  }
+  .formula-term .const{ padding:6px 0; color:var(--ink-faint); }
+  .formula-term .locked{ background:var(--bg-sunken); color:var(--ink-faint); }
+
+  .saves-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }
+  @media (max-width:720px){ .saves-grid{ grid-template-columns:1fr; } }
+
+  .table-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:6px; background:var(--bg-raised); }
+  table{ border-collapse:collapse; width:100%; min-width:560px; }
+  th,td{ padding:7px 9px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
+  th{ font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; background:var(--bg-sunken); white-space:nowrap; }
+  tr:last-child td{ border-bottom:none; }
+  td input, td select{ min-width:56px; }
+  td.name-cell input{ min-width:120px; }
+  td.narrow{ width:1%; }
+  .row-total{ font-family:var(--font-mono); font-weight:700; text-align:center; color:var(--accent); display:block; }
+  .chk{ display:flex; align-items:center; justify-content:center; }
+  .attr-pill{ display:inline-block; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; }
+  .skill-flags{ font-size:10px; color:var(--accent-2); margin-left:3px; }
+  .remove-btn{ color:var(--accent); border-color:var(--accent); background:transparent; }
+  .add-row-btn{ margin-top:10px; }
+
+  .pericias-legend{ font-size:11.5px; color:var(--ink-faint); margin-top:8px; }
+
+  .freeform-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:720px){ .freeform-grid{ grid-template-columns:1fr; } }
+  .freeform-textarea{ width:100%; min-height:200px; }
+
+  .spell-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:640px){ .spell-grid{ grid-template-columns:1fr; } }
+  .spell-circle{ padding:10px 12px; }
+  .spell-circle textarea{ min-height:56px; }
+
+  .money-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  @media (max-width:640px){ .money-grid{ grid-template-columns:repeat(2,1fr); } }
+
+  .notes-textarea{ width:100%; min-height:200px; }
+  .info-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  @media (max-width:720px){ .info-grid{ grid-template-columns:1fr; } }
+  .weight-total{ font-size:12.5px; color:var(--ink-faint); margin-top:6px; }
+
+  .footer-bar{
+    position:fixed; left:0; right:0; bottom:0; z-index:6; background:var(--bg-raised); border-top:1px solid var(--line);
+    padding:10px 16px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+  }
+  .save-indicator{ font-size:11.5px; color:var(--ink-faint); align-self:center; margin-right:auto; display:flex; align-items:center; gap:5px; }
+  .save-dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); }
+
+  details.help{ margin:16px 0 0; }
+  details.help summary{ cursor:pointer; font-size:12px; color:var(--ink-faint); letter-spacing:.03em; }
+  details.help .help-body{ margin-top:8px; padding:10px 12px; background:var(--bg-sunken); border-radius:6px; font-size:12.5px; color:var(--ink-soft); line-height:1.6; }
+
+  @media (prefers-reduced-motion: reduce){ .bar-fill{ transition:none; } }
+</style>
+
+<div class="app">
+  <div class="masthead">
+    <div class="masthead-inner">
+      <div class="eyebrow"><span>&#9760;</span> Ficha de Aventureiro &middot; Dark Lord RPG</div>
+      <input class="name-input" data-path="id.nome" placeholder="Nome do personagem" autocomplete="off">
+      <div class="id-grid">
+        <div class="field"><span class="label">Jogador</span><input data-path="id.jogador" autocomplete="off"></div>
+        <div class="field"><span class="label">Raça</span><input data-path="id.raca" autocomplete="off"></div>
+        <div class="field"><span class="label">Classe</span><input data-path="id.classe" autocomplete="off"></div>
+        <div class="field"><span class="label">Nível</span><input data-path="id.nivel" type="number" min="1" value="1" class="tabular" id="nivel"></div>
+        <div class="field"><span class="label">Tendência</span><input data-path="id.tendencia" autocomplete="off"></div>
+        <div class="field"><span class="label">Sexo</span><input data-path="id.sexo" autocomplete="off"></div>
+        <div class="field"><span class="label">Idade</span><input data-path="id.idade" autocomplete="off"></div>
+        <div class="field"><span class="label">Divindade</span><input data-path="id.divindade" autocomplete="off"></div>
+        <div class="field"><span class="label">Tamanho</span><input data-path="id.tamanho" placeholder="Médio" autocomplete="off"></div>
+        <div class="field"><span class="label">Deslocamento</span><input data-path="id.deslocamento" placeholder="9m" autocomplete="off"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <div class="tab" data-tab="atributos" role="tab" aria-selected="true">Atributos</div>
+    <div class="tab" data-tab="combate" role="tab" aria-selected="false">Combate</div>
+    <div class="tab" data-tab="pericias" role="tab" aria-selected="false">Perícias</div>
+    <div class="tab" data-tab="habilidades" role="tab" aria-selected="false">Habilidades &amp; Talentos</div>
+    <div class="tab" data-tab="magias" role="tab" aria-selected="false">Magias</div>
+    <div class="tab" data-tab="equipamento" role="tab" aria-selected="false">Equipamento &amp; Dinheiro</div>
+    <div class="tab" data-tab="notas" role="tab" aria-selected="false">Notas</div>
+  </div>
+
+  <!-- ATRIBUTOS -->
+  <section class="panel active" id="panel-atributos">
+    <div class="section-title">Habilidades</div>
+    <div class="attr-grid" id="attr-grid"></div>
+
+    <div class="stat-grid">
+      <div class="card stat-card hero">
+        <span class="label">PV &middot; Pontos de Vida</span>
+        <div class="pair"><input data-path="combat.pvAtual" type="number" value="0" class="tabular" id="pvAtual"><span class="sep">/</span><input data-path="combat.pvMax" type="number" value="0" class="tabular" id="pvMax"></div>
+        <div class="bar-track"><div class="bar-fill" id="pvBar" style="width:0%"></div></div>
+      </div>
+      <div class="card stat-card">
+        <span class="label">Pontos de Ação</span>
+        <input data-path="combat.pontosAcao" type="number" value="0" class="tabular">
+      </div>
+      <div class="card stat-card">
+        <span class="label">Redução de Dano</span>
+        <input data-path="combat.reducaoDano" type="number" value="0" class="tabular">
+      </div>
+    </div>
+  </section>
+
+  <!-- COMBATE -->
+  <section class="panel" id="panel-combate">
+    <div class="section-title">Classe de Armadura <span class="hint">CA = 10 + ½ nível + Des + armadura + escudo + tamanho + outros</span></div>
+    <div class="card formula-card">
+      <div class="formula-row">
+        <div class="formula-term"><span class="total-box tabular" id="caTotal">10</span><span class="label" style="margin-top:4px">CA Total</span></div>
+        <div class="op">=</div>
+        <div class="formula-term"><span class="const locked">10</span><span class="label">Base</span></div>
+        <div class="op">+</div>
+        <div class="formula-term"><span class="const locked tabular" id="caMetadeNivel">0</span><span class="label">½ Nível</span></div>
+        <div class="op">+</div>
+        <div class="formula-term"><span class="const locked tabular" id="caDesMod">+0</span><span class="label">Des</span></div>
+        <div class="op">+</div>
+        <div class="formula-term"><input type="number" value="0" class="tabular" data-path="ca.bonusArmadura"><span class="label">Armadura</span></div>
+        <div class="op">+</div>
+        <div class="formula-term"><input type="number" value="0" class="tabular" data-path="ca.bonusEscudo"><span class="label">Escudo</span></div>
+        <div class="op">+</div>
+        <div class="formula-term"><input type="number" value="0" class="tabular" data-path="combat.modTamanho" id="modTamanho"><span class="label">Tamanho</span></div>
+        <div class="op">+</div>
+        <div class="formula-term"><input type="number" value="0" class="tabular" data-path="ca.outrosA"><span class="label">Outros</span></div>
+        <div class="op">+</div>
+        <div class="formula-term"><input type="number" value="0" class="tabular" data-path="ca.outrosB"><span class="label">Outros</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">Resistências <span class="hint">½ nível + habilidade + outros</span></div>
+    <div class="saves-grid">
+      <div class="card formula-card">
+        <span class="label">Fortitude (Con)</span>
+        <div class="formula-row">
+          <div class="formula-term"><span class="total-box tabular" id="fortTotal">0</span></div>
+          <div class="op">=</div>
+          <div class="formula-term"><span class="const locked tabular" id="fortMetade">0</span><span class="label">½ Nv.</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><span class="const locked tabular" id="fortConMod">+0</span><span class="label">Con</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><input type="number" value="0" class="tabular" data-path="resist.fortOutros"><span class="label">Outros</span></div>
+        </div>
+      </div>
+      <div class="card formula-card">
+        <span class="label">Reflexos (Des)</span>
+        <div class="formula-row">
+          <div class="formula-term"><span class="total-box tabular" id="refTotal">0</span></div>
+          <div class="op">=</div>
+          <div class="formula-term"><span class="const locked tabular" id="refMetade">0</span><span class="label">½ Nv.</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><span class="const locked tabular" id="refDesMod">+0</span><span class="label">Des</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><input type="number" value="0" class="tabular" data-path="resist.refOutros"><span class="label">Outros</span></div>
+        </div>
+      </div>
+      <div class="card formula-card">
+        <span class="label">Vontade (Sab)</span>
+        <div class="formula-row">
+          <div class="formula-term"><span class="total-box tabular" id="vonTotal">0</span></div>
+          <div class="op">=</div>
+          <div class="formula-term"><span class="const locked tabular" id="vonMetade">0</span><span class="label">½ Nv.</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><span class="const locked tabular" id="vonSabMod">+0</span><span class="label">Sab</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><input type="number" value="0" class="tabular" data-path="resist.vonOutros"><span class="label">Outros</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Ataques <span class="hint">bônus base de ataque + habilidade + tamanho + outros</span></div>
+    <div class="row-flex" style="margin-bottom:10px;">
+      <div class="field" style="max-width:200px;"><span class="label">Bônus Base de Ataque</span><input type="number" value="0" class="tabular" data-path="combat.bba" id="bba"></div>
+    </div>
+    <div class="saves-grid" style="grid-template-columns:repeat(2,1fr);">
+      <div class="card formula-card">
+        <span class="label">Corpo-a-Corpo</span>
+        <div class="formula-row">
+          <div class="formula-term"><span class="total-box tabular" id="ccTotal">0</span></div>
+          <div class="op">=</div>
+          <div class="formula-term"><span class="const locked tabular" id="ccBba">0</span><span class="label">BBA</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><span class="const locked tabular" id="ccForMod">+0</span><span class="label">For</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><span class="const locked tabular" id="ccTamanho">0</span><span class="label">Tam.</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><input type="number" value="0" class="tabular" data-path="combat.ccOutros"><span class="label">Outros</span></div>
+        </div>
+      </div>
+      <div class="card formula-card">
+        <span class="label">À Distância</span>
+        <div class="formula-row">
+          <div class="formula-term"><span class="total-box tabular" id="distTotal">0</span></div>
+          <div class="op">=</div>
+          <div class="formula-term"><span class="const locked tabular" id="distBba">0</span><span class="label">BBA</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><span class="const locked tabular" id="distDesMod">+0</span><span class="label">Des</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><span class="const locked tabular" id="distTamanho">0</span><span class="label">Tam.</span></div>
+          <div class="op">+</div>
+          <div class="formula-term"><input type="number" value="0" class="tabular" data-path="combat.distOutros"><span class="label">Outros</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Armas</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Arma</th><th>Bônus de Ataque</th><th>Dano</th><th>Crítico</th><th>Distância</th><th>Tipo</th><th></th></tr></thead>
+        <tbody id="armas-body"></tbody>
+      </table>
+    </div>
+    <button class="add-row-btn small" id="add-arma">+ Adicionar arma</button>
+
+    <div class="section-title">Armadura / Escudo</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Item</th><th>Bônus na CA</th><th>Bônus Máx. de Destreza</th><th>Penalidade de Armadura</th><th></th></tr></thead>
+        <tbody id="armaduras-body"></tbody>
+      </table>
+    </div>
+    <button class="add-row-btn small" id="add-armadura">+ Adicionar armadura/escudo</button>
+  </section>
+
+  <!-- PERICIAS -->
+  <section class="panel" id="panel-pericias">
+    <div class="section-title">Perícias <span class="hint">Total = graduação + habilidade + outros</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Perícia</th><th>Habilid.</th><th>Grad.</th><th>Outros</th><th>Total</th></tr></thead>
+        <tbody id="pericias-body"></tbody>
+        <tbody id="pericias-custom-body"></tbody>
+      </table>
+    </div>
+    <button class="add-row-btn small" id="add-pericia">+ Adicionar perícia</button>
+    <div class="pericias-legend">‡ penalidade de armadura aplicável &middot; * somente treinado (graduação &gt; 0)</div>
+  </section>
+
+  <!-- HABILIDADES & TALENTOS -->
+  <section class="panel" id="panel-habilidades">
+    <div class="section-title">Habilidades de Raça e Classe</div>
+    <div class="freeform-grid">
+      <div class="card" style="padding:12px;">
+        <span class="label">Habilidades de Raça</span>
+        <textarea class="freeform-textarea" data-path="habilidades.raca" placeholder="Uma por linha..."></textarea>
+      </div>
+      <div class="card" style="padding:12px;">
+        <span class="label">Habilidades de Classe</span>
+        <textarea class="freeform-textarea" data-path="habilidades.classe" placeholder="Uma por linha..."></textarea>
+      </div>
+    </div>
+
+    <div class="section-title">Talentos e Idiomas</div>
+    <div class="freeform-grid">
+      <div class="card" style="padding:12px;">
+        <span class="label">Talentos</span>
+        <textarea class="freeform-textarea" data-path="habilidades.talentos" placeholder="Uma por linha..."></textarea>
+      </div>
+      <div class="card" style="padding:12px;">
+        <span class="label">Idiomas</span>
+        <textarea class="freeform-textarea" data-path="habilidades.idiomas" style="min-height:200px" placeholder="Um por linha..."></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAGIAS -->
+  <section class="panel" id="panel-magias">
+    <div class="section-title">Pontos de Magia</div>
+    <div class="stat-grid" style="grid-template-columns:repeat(2,1fr); max-width:420px;">
+      <div class="card stat-card hero">
+        <span class="label">PM &middot; Total / Atuais</span>
+        <div class="pair"><input data-path="magia.pmMax" type="number" value="0" class="tabular" id="pmMax"><span class="sep">/</span><input data-path="magia.pmAtual" type="number" value="0" class="tabular" id="pmAtual"></div>
+        <div class="bar-track"><div class="bar-fill pm" id="pmBar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="section-title">Magias Conhecidas / Preparadas <span class="hint">por círculo</span></div>
+    <div class="spell-grid" id="spell-grid"></div>
+  </section>
+
+  <!-- EQUIPAMENTO & DINHEIRO -->
+  <section class="panel" id="panel-equipamento">
+    <div class="section-title">Equipamento</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Item</th><th>Peso</th><th></th></tr></thead>
+        <tbody id="equipamento-body"></tbody>
+      </table>
+    </div>
+    <button class="add-row-btn small" id="add-item">+ Adicionar item</button>
+    <div class="weight-total" id="pesoTotal">Peso total: 0</div>
+
+    <div class="section-title">Dinheiro</div>
+    <div class="money-grid">
+      <div class="field"><span class="label">T$</span><input data-path="dinheiro.tc" type="number" value="0" class="tabular"></div>
+      <div class="field"><span class="label">TP</span><input data-path="dinheiro.tp" type="number" value="0" class="tabular"></div>
+      <div class="field"><span class="label">TO</span><input data-path="dinheiro.to" type="number" value="0" class="tabular"></div>
+      <div class="field"><span class="label">TL</span><input data-path="dinheiro.tl" type="number" value="0" class="tabular"></div>
+    </div>
+  </section>
+
+  <!-- NOTAS -->
+  <section class="panel" id="panel-notas">
+    <div class="section-title">Informações</div>
+    <div class="info-grid">
+      <div class="field"><span class="label">Campanha</span><input data-path="info.campanha"></div>
+      <div class="field"><span class="label">Mestre</span><input data-path="info.mestre"></div>
+      <div class="field"><span class="label">Outros Jogadores</span><input data-path="info.outrosJogadores"></div>
+      <div class="field"><span class="label">XP Atual</span><input data-path="info.xpAtual" type="number" value="0" class="tabular"></div>
+      <div class="field"><span class="label">XP para Próximo Nível</span><input data-path="info.xpProximo" type="number" value="0" class="tabular"></div>
+    </div>
+
+    <div class="section-title">História, Personalidade e Aparência</div>
+    <div class="freeform-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="card" style="padding:12px;"><span class="label">História</span><textarea class="freeform-textarea" data-path="perfil.historia"></textarea></div>
+      <div class="card" style="padding:12px;"><span class="label">Personalidade</span><textarea class="freeform-textarea" data-path="perfil.personalidade"></textarea></div>
+      <div class="card" style="padding:12px;"><span class="label">Aparência</span><textarea class="freeform-textarea" data-path="perfil.aparencia"></textarea></div>
+    </div>
+
+    <div class="section-title">Notas</div>
+    <textarea class="notes-textarea" data-path="perfil.notas" placeholder="Anotações da mesa, pendências, contratos..."></textarea>
+
+    <details class="help">
+      <summary>Como deixar essa ficha à mão no celular</summary>
+      <div class="help-body">
+        Tudo que você digita aqui já salva sozinho neste navegador, neste aparelho — não precisa clicar em nada para isso.<br><br>
+        Para levar os dados preenchidos para o celular (ou mandar para outra pessoa), use o botão <b>Link com dados</b>: ele copia um link que já abre com a ficha preenchida, sem precisar de arquivo.<br><br>
+        O botão <b>Exportar</b> baixa um arquivo <code>.json</code> como backup — use <b>Importar</b> para carregar esse arquivo depois.<br><br>
+        No iPhone (Safari): toque em Compartilhar &rarr; Adicionar à Tela de Início.<br>
+        No Android (Chrome): toque no menu &#8942; &rarr; Adicionar à tela inicial / Instalar app.
+      </div>
+    </details>
+  </section>
+
+  <div class="footer-bar">
+    <span class="save-indicator"><span class="save-dot"></span><span id="saveText">Salvo</span></span>
+    <button id="btn-share">Link com dados</button>
+    <button id="btn-export">Exportar</button>
+    <button id="btn-import">Importar</button>
+    <button id="btn-new" class="ghost">Nova ficha</button>
+    <input type="file" id="file-import" accept="application/json" style="display:none">
+  </div>
+</div>
+
+<script>
+(function(){
+  var STORAGE_KEY = 'dark-lord-rpg-ficha-v1';
+
+  var ATTRS = [
+    {key:'FOR', label:'Força'}, {key:'DES', label:'Destreza'}, {key:'CON', label:'Constituição'},
+    {key:'INT', label:'Inteligência'}, {key:'SAB', label:'Sabedoria'}, {key:'CAR', label:'Carisma'}
+  ];
+
+  var FIXED_SKILLS = [
+    ['acrobacia','Acrobacia','DES',0,1],
+    ['adestrar_animais','Adestrar Animais','CAR',1,0],
+    ['atletismo','Atletismo','FOR',0,1],
+    ['atuacao_1','Atuação','CAR',0,0,1],
+    ['atuacao_2','Atuação','CAR',0,0,1],
+    ['cavalgar','Cavalgar','DES',0,0],
+    ['conhecimento_1','Conhecimento','INT',1,0,1],
+    ['conhecimento_2','Conhecimento','INT',1,0,1],
+    ['cura','Cura','SAB',0,0],
+    ['diplomacia','Diplomacia','CAR',0,0],
+    ['enganacao','Enganação','CAR',0,0],
+    ['furtividade','Furtividade','DES',0,1],
+    ['identificar_magia','Identificar Magia','INT',1,0],
+    ['iniciativa','Iniciativa','DES',0,0],
+    ['intimidacao','Intimidação','CAR',0,0],
+    ['intuicao','Intuição','SAB',0,0],
+    ['ladinagem','Ladinagem','DES',1,1],
+    ['obter_informacao','Obter Informação','CAR',0,0],
+    ['oficio_1','Ofício','INT',0,0,1],
+    ['oficio_2','Ofício','INT',0,0,1],
+    ['percepcao','Percepção','SAB',0,0],
+    ['sobrevivencia','Sobrevivência','SAB',0,0]
+  ];
+
+  function mod(score){ return Math.floor((Number(score||10)-10)/2); }
+  function fmt(n){ return (n>=0? '+':'') + n; }
+
+  var attrGrid = document.getElementById('attr-grid');
+  ATTRS.forEach(function(a){
+    var card = document.createElement('div');
+    card.className = 'card attr-card';
+    card.innerHTML =
+      '<span class="label">'+a.label+' ('+a.key+')</span>'+
+      '<input data-path="attrs.'+a.key+'" type="number" value="10" class="tabular attr-score" data-attr="'+a.key+'">'+
+      '<div class="attr-mod tabular" id="mod-'+a.key+'">+0</div>'+
+      '<div class="attr-mod-label">Mod.</div>';
+    attrGrid.appendChild(card);
+  });
+
+  var periciasBody = document.getElementById('pericias-body');
+  FIXED_SKILLS.forEach(function(s){
+    var slug=s[0], name=s[1], attr=s[2], trainedOnly=s[3], armorPenalty=s[4], specify=s[5];
+    var flags = (trainedOnly?'*':'') + (armorPenalty?'‡':'');
+    var tr = document.createElement('tr');
+    var nameCell = specify
+      ? name+' <input data-path="pericias.'+slug+'.especifique" placeholder="especifique" style="width:110px;display:inline-block;margin-left:6px;">'
+      : name;
+    tr.innerHTML =
+      '<td class="name-cell">'+nameCell+(flags?'<span class="skill-flags">'+flags+'</span>':'')+'</td>'+
+      '<td><span class="attr-pill">'+attr+'</span></td>'+
+      '<td><input type="number" value="0" class="tabular pericia-input" data-path="pericias.'+slug+'.grad" data-skill="'+slug+'" data-attr="'+attr+'" style="width:52px"></td>'+
+      '<td><input type="number" value="0" class="tabular pericia-input" data-path="pericias.'+slug+'.outros" data-skill="'+slug+'" data-attr="'+attr+'" style="width:52px"></td>'+
+      '<td class="row-total tabular" id="total-'+slug+'">+0</td>';
+    periciasBody.appendChild(tr);
+  });
+
+  function makeRow(container, fields, values, opts){
+    opts = opts || {};
+    var tr = document.createElement('tr');
+    if(opts.className) tr.className = opts.className;
+    var html = '';
+    fields.forEach(function(f){
+      var v = (values && values[f.key] !== undefined) ? values[f.key] : (f.default !== undefined ? f.default : '');
+      if(f.type === 'select'){
+        html += '<td'+(f.narrow?' class="narrow"':'')+'><select class="row-field" data-field="'+f.key+'">';
+        f.options.forEach(function(o){ html += '<option value="'+o+'"'+(o===v?' selected':'')+'>'+o+'</option>'; });
+        html += '</select></td>';
+      } else if(f.type === 'computed'){
+        html += '<td class="row-total" data-computed="'+f.key+'">+0</td>';
+      } else {
+        html += '<td class="'+(f.nameCell?'name-cell':'')+(f.narrow?' narrow':'')+'"><input class="row-field tabular" type="'+(f.type||'text')+'" data-field="'+f.key+'" value="'+String(v).replace(/"/g,'&quot;')+'" style="'+(f.width?('width:'+f.width+'px'):'')+'"></td>';
+      }
+    });
+    html += '<td class="narrow"><button class="small remove-btn row-remove">&times;</button></td>';
+    tr.innerHTML = html;
+    tr.querySelector('.row-remove').addEventListener('click', function(){ tr.remove(); scheduleSave(); });
+    container.appendChild(tr);
+    return tr;
+  }
+
+  var armaFields = [ {key:'nome', nameCell:true, width:120}, {key:'bonus', width:70}, {key:'dano', width:70}, {key:'critico', width:60}, {key:'distancia', width:80}, {key:'tipo', width:80} ];
+  var armaduraFields = [ {key:'nome', nameCell:true, width:140}, {key:'bonusCA', type:'number', width:70}, {key:'maxDes', type:'number', width:80}, {key:'penalidade', type:'number', width:80} ];
+  var itemFields = [ {key:'nome', nameCell:true, width:200}, {key:'peso', type:'number', width:70} ];
+  var customPericiaFields = [
+    {key:'nome', nameCell:true, width:150},
+    {key:'attr', type:'select', options:['FOR','DES','CON','INT','SAB','CAR'], narrow:true},
+    {key:'grad', type:'number', width:52},
+    {key:'outros', type:'number', width:52},
+    {key:'total', type:'computed'}
+  ];
+
+  var armasBody = document.getElementById('armas-body');
+  var armadurasBody = document.getElementById('armaduras-body');
+  var itensBody = document.getElementById('equipamento-body');
+  var periciasCustomBody = document.getElementById('pericias-custom-body');
+
+  document.getElementById('add-arma').addEventListener('click', function(){ makeRow(armasBody, armaFields); scheduleSave(); });
+  document.getElementById('add-armadura').addEventListener('click', function(){ makeRow(armadurasBody, armaduraFields); scheduleSave(); });
+  document.getElementById('add-item').addEventListener('click', function(){ makeRow(itensBody, itemFields); scheduleSave(); });
+  document.getElementById('add-pericia').addEventListener('click', function(){ makeRow(periciasCustomBody, customPericiaFields, null, {className:'custom-pericia-row'}); scheduleSave(); });
+
+  var CIRCLES = ['0','1º','2º','3º','4º','5º','6º','7º','8º','9º'];
+  var spellGrid = document.getElementById('spell-grid');
+  CIRCLES.forEach(function(c, idx){
+    var box = document.createElement('div');
+    box.className = 'card spell-circle';
+    box.innerHTML = '<span class="label">Círculo '+c+'</span><textarea data-path="magias.circulo'+idx+'" placeholder="Magias deste círculo, uma por linha..."></textarea>';
+    spellGrid.appendChild(box);
+  });
+
+  function recalc(){
+    var nivel = Number(document.getElementById('nivel').value) || 1;
+    var metadeNivel = Math.floor(nivel/2);
+    var attrMods = {};
+    ATTRS.forEach(function(a){
+      var input = document.querySelector('.attr-score[data-attr="'+a.key+'"]');
+      var m = mod(input.value);
+      attrMods[a.key] = m;
+      document.getElementById('mod-'+a.key).textContent = fmt(m);
+    });
+
+    var bonusArmadura = Number(document.querySelector('[data-path="ca.bonusArmadura"]').value)||0;
+    var bonusEscudo = Number(document.querySelector('[data-path="ca.bonusEscudo"]').value)||0;
+    var outrosA = Number(document.querySelector('[data-path="ca.outrosA"]').value)||0;
+    var outrosB = Number(document.querySelector('[data-path="ca.outrosB"]').value)||0;
+    var modTamanho = Number(document.getElementById('modTamanho').value)||0;
+    document.getElementById('caMetadeNivel').textContent = metadeNivel;
+    document.getElementById('caDesMod').textContent = fmt(attrMods.DES);
+    document.getElementById('caTotal').textContent = 10 + metadeNivel + attrMods.DES + bonusArmadura + bonusEscudo + modTamanho + outrosA + outrosB;
+
+    document.getElementById('fortMetade').textContent = metadeNivel;
+    document.getElementById('fortConMod').textContent = fmt(attrMods.CON);
+    var fortOutros = Number(document.querySelector('[data-path="resist.fortOutros"]').value)||0;
+    document.getElementById('fortTotal').textContent = fmt(metadeNivel + attrMods.CON + fortOutros);
+
+    document.getElementById('refMetade').textContent = metadeNivel;
+    document.getElementById('refDesMod').textContent = fmt(attrMods.DES);
+    var refOutros = Number(document.querySelector('[data-path="resist.refOutros"]').value)||0;
+    document.getElementById('refTotal').textContent = fmt(metadeNivel + attrMods.DES + refOutros);
+
+    document.getElementById('vonMetade').textContent = metadeNivel;
+    document.getElementById('vonSabMod').textContent = fmt(attrMods.SAB);
+    var vonOutros = Number(document.querySelector('[data-path="resist.vonOutros"]').value)||0;
+    document.getElementById('vonTotal').textContent = fmt(metadeNivel + attrMods.SAB + vonOutros);
+
+    var bba = Number(document.getElementById('bba').value)||0;
+    var ccOutros = Number(document.querySelector('[data-path="combat.ccOutros"]').value)||0;
+    var distOutros = Number(document.querySelector('[data-path="combat.distOutros"]').value)||0;
+    document.getElementById('ccBba').textContent = bba;
+    document.getElementById('ccForMod').textContent = fmt(attrMods.FOR);
+    document.getElementById('ccTamanho').textContent = modTamanho;
+    document.getElementById('ccTotal').textContent = fmt(bba + attrMods.FOR + modTamanho + ccOutros);
+    document.getElementById('distBba').textContent = bba;
+    document.getElementById('distDesMod').textContent = fmt(attrMods.DES);
+    document.getElementById('distTamanho').textContent = modTamanho;
+    document.getElementById('distTotal').textContent = fmt(bba + attrMods.DES + modTamanho + distOutros);
+
+    var pvA = Number(document.getElementById('pvAtual').value)||0;
+    var pvM = Number(document.getElementById('pvMax').value)||0;
+    document.getElementById('pvBar').style.width = (pvM>0 ? Math.max(0,Math.min(100,pvA/pvM*100)) : 0) + '%';
+    var pmA = Number(document.getElementById('pmAtual').value)||0;
+    var pmM = Number(document.getElementById('pmMax').value)||0;
+    document.getElementById('pmBar').style.width = (pmM>0 ? Math.max(0,Math.min(100,pmA/pmM*100)) : 0) + '%';
+
+    document.querySelectorAll('.pericia-input').forEach(function(el){
+      var skill = el.getAttribute('data-skill'); var attr = el.getAttribute('data-attr');
+      var grad = Number(document.querySelector('[data-path="pericias.'+skill+'.grad"]').value)||0;
+      var outros = Number(document.querySelector('[data-path="pericias.'+skill+'.outros"]').value)||0;
+      var total = grad + attrMods[attr] + outros;
+      var cell = document.getElementById('total-'+skill);
+      if(cell) cell.textContent = fmt(total);
+    });
+
+    document.querySelectorAll('.custom-pericia-row').forEach(function(tr){
+      var attrSel = tr.querySelector('[data-field="attr"]');
+      var grad = Number(tr.querySelector('[data-field="grad"]').value)||0;
+      var outros = Number(tr.querySelector('[data-field="outros"]').value)||0;
+      var total = grad + attrMods[attrSel.value] + outros;
+      tr.querySelector('[data-computed="total"]').textContent = fmt(total);
+    });
+
+    var pesoTotal = 0;
+    itensBody.querySelectorAll('[data-field="peso"]').forEach(function(el){ pesoTotal += Number(el.value)||0; });
+    document.getElementById('pesoTotal').textContent = 'Peso total: ' + pesoTotal;
+  }
+
+  var saveTimer = null;
+  function scheduleSave(){
+    recalc();
+    clearTimeout(saveTimer);
+    var indicator = document.getElementById('saveText');
+    indicator.textContent = 'Salvando…';
+    saveTimer = setTimeout(function(){ persist(); indicator.textContent = 'Salvo'; }, 350);
+  }
+
+  function collectRows(container, fields){
+    return Array.prototype.map.call(container.children, function(tr){
+      var obj = {};
+      fields.forEach(function(f){
+        if(f.type === 'computed') return;
+        var el = tr.querySelector('[data-field="'+f.key+'"]');
+        obj[f.key] = el ? el.value : '';
+      });
+      return obj;
+    });
+  }
+  function fillRows(container, fields, rows, opts){
+    container.innerHTML = '';
+    (rows||[]).forEach(function(r){ makeRow(container, fields, r, opts); });
+  }
+
+  function setPath(obj, path, value){
+    var parts = path.split('.'); var cur = obj;
+    for(var i=0;i<parts.length-1;i++){ if(!cur[parts[i]]) cur[parts[i]] = {}; cur = cur[parts[i]]; }
+    cur[parts[parts.length-1]] = value;
+  }
+  function getPath(obj, path){
+    var parts = path.split('.'); var cur = obj;
+    for(var i=0;i<parts.length;i++){ if(cur === undefined || cur === null) return undefined; cur = cur[parts[i]]; }
+    return cur;
+  }
+
+  function serialize(){
+    var obj = {};
+    document.querySelectorAll('[data-path]').forEach(function(el){
+      var path = el.getAttribute('data-path');
+      var val = el.type === 'checkbox' ? el.checked : el.value;
+      setPath(obj, path, val);
+    });
+    obj.armas = collectRows(armasBody, armaFields);
+    obj.armaduras = collectRows(armadurasBody, armaduraFields);
+    obj.itens = collectRows(itensBody, itemFields);
+    obj.periciasExtra = collectRows(periciasCustomBody, customPericiaFields);
+    return obj;
+  }
+
+  function apply(obj){
+    if(!obj) return;
+    document.querySelectorAll('[data-path]').forEach(function(el){
+      var path = el.getAttribute('data-path');
+      var val = getPath(obj, path);
+      if(val === undefined) return;
+      if(el.type === 'checkbox') el.checked = !!val; else el.value = val;
+    });
+    fillRows(armasBody, armaFields, obj.armas);
+    fillRows(armadurasBody, armaduraFields, obj.armaduras);
+    fillRows(itensBody, itemFields, obj.itens);
+    fillRows(periciasCustomBody, customPericiaFields, obj.periciasExtra, {className:'custom-pericia-row'});
+    recalc();
+  }
+
+  function persist(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(serialize())); }catch(e){} }
+  function loadStored(){ try{ var raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
+
+  function encodeState(obj){ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
+  function decodeState(str){ return JSON.parse(decodeURIComponent(escape(atob(str)))); }
+  function loadFromHash(){
+    var h = window.location.hash;
+    if(h && h.indexOf('#ficha=') === 0){
+      try{ return decodeState(h.slice(7)); }catch(e){ return null; }
+    }
+    return null;
+  }
+  function flashSaveText(msg){
+    var el = document.getElementById('saveText');
+    var prev = el.textContent;
+    el.textContent = msg;
+    setTimeout(function(){ el.textContent = prev; }, 2200);
+  }
+
+  document.getElementById('btn-share').addEventListener('click', function(){
+    var encoded = encodeState(serialize());
+    var url = window.location.href.split('#')[0] + '#ficha=' + encoded;
+    history.replaceState(null, '', '#ficha=' + encoded);
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ flashSaveText('Link copiado!'); })
+        .catch(function(){ prompt('Copie o link abaixo e abra no outro aparelho:', url); });
+    } else {
+      prompt('Copie o link abaixo e abra no outro aparelho:', url);
+    }
+  });
+
+  document.addEventListener('input', function(e){ if(e.target.closest('.app')) scheduleSave(); });
+  document.addEventListener('change', function(e){ if(e.target.closest('.app')) scheduleSave(); });
+
+  document.querySelectorAll('.tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(t){ t.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+      tab.setAttribute('aria-selected','true');
+      document.getElementById('panel-'+tab.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+
+  document.getElementById('btn-export').addEventListener('click', function(){
+    var data = serialize();
+    var name = (getPath(data,'id.nome') || 'personagem').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-') || 'personagem';
+    var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'ficha-dark-lord-rpg-'+name+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('btn-import').addEventListener('click', function(){ document.getElementById('file-import').click(); });
+  document.getElementById('file-import').addEventListener('change', function(e){
+    var file = e.target.files[0]; if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{ apply(JSON.parse(reader.result)); persist(); }
+      catch(err){ alert('Arquivo inválido.'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('btn-new').addEventListener('click', function(){
+    if(!confirm('Começar uma ficha nova? Isso substitui os dados atuais salvos neste navegador (exporte antes, se quiser guardar).')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    document.querySelectorAll('[data-path]').forEach(function(el){
+      if(el.type === 'checkbox') el.checked = false;
+      else if(el.getAttribute('data-attr')) el.value = 10;
+      else if(el.type === 'number') el.value = 0;
+      else el.value = '';
+    });
+    document.getElementById('nivel').value = 1;
+    armasBody.innerHTML=''; armadurasBody.innerHTML=''; itensBody.innerHTML=''; periciasCustomBody.innerHTML='';
+    recalc();
+  });
+
+  var fromHash = loadFromHash();
+  var stored = loadStored();
+  if(fromHash){
+    apply(fromHash);
+    persist();
+    flashSaveText('Ficha carregada do link!');
+  } else if(stored){
+    apply(stored);
+  } else {
+    makeRow(armasBody, armaFields);
+    makeRow(armadurasBody, armaduraFields);
+    makeRow(itensBody, itemFields);
+    for(var i=0;i<3;i++){ makeRow(periciasCustomBody, customPericiaFields, null, {className:'custom-pericia-row'}); }
+    recalc();
+  }
+})();
+</script>
