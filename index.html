@@ -171,6 +171,80 @@
   details.help .help-body{ margin-top:8px; padding:10px 12px; background:var(--bg-sunken); border-radius:6px; font-size:12.5px; color:var(--ink-soft); line-height:1.6; }
 
   @media (prefers-reduced-motion: reduce){ .bar-fill{ transition:none; } }
+
+  .active-conditions{ display:none; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .condition-tag{
+    font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; font-weight:700;
+    color:var(--accent-ink); background:var(--accent); border-radius:4px; padding:3px 7px;
+  }
+
+  .condition-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+  .condition-chip{
+    display:inline-flex; align-items:center; gap:6px; padding:6px 11px;
+    background:var(--bg-sunken); border:1px solid var(--line); border-radius:20px;
+    font-size:12.5px; color:var(--ink-soft); cursor:pointer; user-select:none;
+  }
+  .condition-chip input{ display:none; }
+  .condition-chip.active{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700; }
+
+  .stepper-btn{
+    width:28px; height:28px; padding:0; border-radius:6px; flex:0 0 auto;
+    font-family:var(--font-mono); font-size:16px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .rollable{ cursor:pointer; }
+  .rollable:hover{ filter:brightness(1.25); }
+  .rollable:active{ transform:scale(0.94); }
+
+  .dice-inline-btn{ padding:4px 6px; font-size:13px; line-height:1; flex:0 0 auto; }
+
+  .dice-fab{
+    position:fixed; right:16px; bottom:76px; z-index:8;
+    width:56px; height:56px; border-radius:50%;
+    background:var(--accent); border:1px solid var(--accent);
+    color:var(--accent-ink); font-size:26px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 18px var(--accent-glow), 0 2px 6px rgba(0,0,0,.5);
+    cursor:pointer;
+  }
+  .dice-fab:hover{ filter:brightness(1.08); }
+
+  .dice-tray{
+    position:fixed; z-index:9;
+    right:16px; bottom:140px; width:360px; max-width:calc(100vw - 32px);
+    max-height:70vh; overflow-y:auto;
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 12px 40px rgba(0,0,0,.6), 0 0 24px var(--accent-glow);
+    padding:14px;
+  }
+  .dice-tray[hidden]{ display:none; }
+  @media (max-width:640px){ .dice-tray{ left:12px; right:12px; width:auto; bottom:132px; } }
+  .dice-tray-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .dice-tray-header .label{ font-size:13px; margin-bottom:0; }
+  .dice-buttons{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+  .die-btn{
+    position:relative; min-width:48px; padding:8px 10px;
+    background:var(--bg-sunken); border:1px solid var(--line); border-radius:8px;
+    color:var(--ink); font-family:var(--font-mono); font-weight:700; cursor:pointer;
+  }
+  .die-btn:hover{ border-color:var(--accent); }
+  .die-count{
+    position:absolute; top:-7px; right:-7px; min-width:18px; height:18px; padding:0 4px;
+    background:var(--accent); color:var(--accent-ink); border-radius:9px;
+    font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .dice-controls{ display:flex; align-items:flex-end; gap:8px; margin-bottom:6px; }
+  .dice-result{ min-height:20px; text-align:center; padding:10px 0; border-top:1px solid var(--line); }
+  .dice-result-label{ font-size:11.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em; }
+  .dice-result-total{ font-family:var(--font-mono); font-size:34px; font-weight:700; color:var(--accent); line-height:1.2; }
+  .dice-result-breakdown{ font-size:12.5px; color:var(--ink-soft); font-family:var(--font-mono); }
+  .dice-error{ color:var(--accent); font-size:12.5px; }
+  .dice-history{ border-top:1px solid var(--line); padding-top:8px; margin-top:4px; display:flex; flex-direction:column; gap:5px; max-height:140px; overflow-y:auto; }
+  .dice-history-item{ display:flex; justify-content:space-between; gap:8px; font-size:11.5px; color:var(--ink-faint); }
+  .dhi-label{ flex:1; color:var(--ink-soft); }
+  .dhi-breakdown{ font-family:var(--font-mono); }
+  .dhi-total{ font-family:var(--font-mono); font-weight:700; color:var(--accent); min-width:28px; text-align:right; }
 </style>
 
 <div class="app">
@@ -190,6 +264,7 @@
         <div class="field"><span class="label">Tamanho</span><input data-path="id.tamanho" placeholder="Médio" autocomplete="off"></div>
         <div class="field"><span class="label">Deslocamento</span><input data-path="id.deslocamento" placeholder="9m" autocomplete="off"></div>
       </div>
+      <div class="active-conditions" id="active-conditions"></div>
     </div>
   </div>
 
@@ -211,12 +286,21 @@
     <div class="stat-grid">
       <div class="card stat-card hero">
         <span class="label">PV &middot; Pontos de Vida</span>
-        <div class="pair"><input data-path="combat.pvAtual" type="number" value="0" class="tabular" id="pvAtual"><span class="sep">/</span><input data-path="combat.pvMax" type="number" value="0" class="tabular" id="pvMax"></div>
+        <div class="pair">
+          <button type="button" class="stepper-btn" data-target="pvAtual" data-delta="-1">&minus;</button>
+          <input data-path="combat.pvAtual" type="number" value="0" class="tabular" id="pvAtual">
+          <button type="button" class="stepper-btn" data-target="pvAtual" data-delta="1">+</button>
+          <span class="sep">/</span><input data-path="combat.pvMax" type="number" value="0" class="tabular" id="pvMax">
+        </div>
         <div class="bar-track"><div class="bar-fill" id="pvBar" style="width:0%"></div></div>
       </div>
       <div class="card stat-card">
         <span class="label">Pontos de Ação</span>
-        <input data-path="combat.pontosAcao" type="number" value="0" class="tabular">
+        <div class="pair">
+          <button type="button" class="stepper-btn" data-target="pontosAcaoInput" data-delta="-1">&minus;</button>
+          <input data-path="combat.pontosAcao" type="number" value="0" class="tabular" id="pontosAcaoInput">
+          <button type="button" class="stepper-btn" data-target="pontosAcaoInput" data-delta="1">+</button>
+        </div>
       </div>
       <div class="card stat-card">
         <span class="label">Redução de Dano</span>
@@ -227,6 +311,25 @@
 
   <!-- COMBATE -->
   <section class="panel" id="panel-combate">
+    <div class="section-title">Turno de Combate</div>
+    <div class="stat-grid" style="grid-template-columns:repeat(2,1fr); max-width:420px;">
+      <div class="card stat-card">
+        <span class="label">Iniciativa</span>
+        <input data-path="combat.iniciativa" type="number" value="0" class="tabular">
+      </div>
+      <div class="card stat-card">
+        <span class="label">Rodada Atual</span>
+        <div class="pair">
+          <button type="button" class="stepper-btn" data-target="turnoInput" data-delta="-1">&minus;</button>
+          <input data-path="combat.turno" type="number" value="1" class="tabular" id="turnoInput">
+          <button type="button" class="stepper-btn" data-target="turnoInput" data-delta="1">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Condições Ativas <span class="hint">toque para ligar/desligar</span></div>
+    <div class="condition-grid" id="condition-grid"></div>
+
     <div class="section-title">Classe de Armadura <span class="hint">CA = 10 + ½ nível + Des + armadura + escudo + tamanho + outros</span></div>
     <div class="card formula-card">
       <div class="formula-row">
@@ -255,7 +358,7 @@
       <div class="card formula-card">
         <span class="label">Fortitude (Con)</span>
         <div class="formula-row">
-          <div class="formula-term"><span class="total-box tabular" id="fortTotal">0</span></div>
+          <div class="formula-term"><span class="total-box tabular rollable" id="fortTotal" title="Clique para rolar">0</span></div>
           <div class="op">=</div>
           <div class="formula-term"><span class="const locked tabular" id="fortMetade">0</span><span class="label">½ Nv.</span></div>
           <div class="op">+</div>
@@ -267,7 +370,7 @@
       <div class="card formula-card">
         <span class="label">Reflexos (Des)</span>
         <div class="formula-row">
-          <div class="formula-term"><span class="total-box tabular" id="refTotal">0</span></div>
+          <div class="formula-term"><span class="total-box tabular rollable" id="refTotal" title="Clique para rolar">0</span></div>
           <div class="op">=</div>
           <div class="formula-term"><span class="const locked tabular" id="refMetade">0</span><span class="label">½ Nv.</span></div>
           <div class="op">+</div>
@@ -279,7 +382,7 @@
       <div class="card formula-card">
         <span class="label">Vontade (Sab)</span>
         <div class="formula-row">
-          <div class="formula-term"><span class="total-box tabular" id="vonTotal">0</span></div>
+          <div class="formula-term"><span class="total-box tabular rollable" id="vonTotal" title="Clique para rolar">0</span></div>
           <div class="op">=</div>
           <div class="formula-term"><span class="const locked tabular" id="vonMetade">0</span><span class="label">½ Nv.</span></div>
           <div class="op">+</div>
@@ -298,7 +401,7 @@
       <div class="card formula-card">
         <span class="label">Corpo-a-Corpo</span>
         <div class="formula-row">
-          <div class="formula-term"><span class="total-box tabular" id="ccTotal">0</span></div>
+          <div class="formula-term"><span class="total-box tabular rollable" id="ccTotal" title="Clique para rolar">0</span></div>
           <div class="op">=</div>
           <div class="formula-term"><span class="const locked tabular" id="ccBba">0</span><span class="label">BBA</span></div>
           <div class="op">+</div>
@@ -312,7 +415,7 @@
       <div class="card formula-card">
         <span class="label">À Distância</span>
         <div class="formula-row">
-          <div class="formula-term"><span class="total-box tabular" id="distTotal">0</span></div>
+          <div class="formula-term"><span class="total-box tabular rollable" id="distTotal" title="Clique para rolar">0</span></div>
           <div class="op">=</div>
           <div class="formula-term"><span class="const locked tabular" id="distBba">0</span><span class="label">BBA</span></div>
           <div class="op">+</div>
@@ -391,7 +494,12 @@
     <div class="stat-grid" style="grid-template-columns:repeat(2,1fr); max-width:420px;">
       <div class="card stat-card hero">
         <span class="label">PM &middot; Total / Atuais</span>
-        <div class="pair"><input data-path="magia.pmMax" type="number" value="0" class="tabular" id="pmMax"><span class="sep">/</span><input data-path="magia.pmAtual" type="number" value="0" class="tabular" id="pmAtual"></div>
+        <div class="pair">
+          <input data-path="magia.pmMax" type="number" value="0" class="tabular" id="pmMax"><span class="sep">/</span>
+          <button type="button" class="stepper-btn" data-target="pmAtual" data-delta="-1">&minus;</button>
+          <input data-path="magia.pmAtual" type="number" value="0" class="tabular" id="pmAtual">
+          <button type="button" class="stepper-btn" data-target="pmAtual" data-delta="1">+</button>
+        </div>
         <div class="bar-track"><div class="bar-fill pm" id="pmBar" style="width:0%"></div></div>
       </div>
     </div>
@@ -453,6 +561,30 @@
       </div>
     </details>
   </section>
+
+  <button id="dice-fab" class="dice-fab" aria-label="Abrir rolador de dados" aria-expanded="false">&#127922;</button>
+  <div id="dice-tray" class="dice-tray" hidden>
+    <div class="dice-tray-header">
+      <span class="label">Rolador de Dados</span>
+      <button id="dice-close" class="small ghost">Fechar</button>
+    </div>
+    <div class="dice-buttons">
+      <button type="button" class="die-btn" data-sides="4">d4<span class="die-count" id="count-4">0</span></button>
+      <button type="button" class="die-btn" data-sides="6">d6<span class="die-count" id="count-6">0</span></button>
+      <button type="button" class="die-btn" data-sides="8">d8<span class="die-count" id="count-8">0</span></button>
+      <button type="button" class="die-btn" data-sides="10">d10<span class="die-count" id="count-10">0</span></button>
+      <button type="button" class="die-btn" data-sides="12">d12<span class="die-count" id="count-12">0</span></button>
+      <button type="button" class="die-btn" data-sides="20">d20<span class="die-count" id="count-20">0</span></button>
+      <button type="button" class="die-btn" data-sides="100">d100<span class="die-count" id="count-100">0</span></button>
+    </div>
+    <div class="dice-controls">
+      <div class="field" style="max-width:90px;"><span class="label">Modificador</span><input type="number" id="dice-mod" value="0" class="tabular"></div>
+      <button type="button" id="dice-roll">Rolar</button>
+      <button type="button" id="dice-clear" class="ghost">Limpar</button>
+    </div>
+    <div class="dice-result" id="dice-result"></div>
+    <div class="dice-history" id="dice-history"></div>
+  </div>
 
   <div class="footer-bar">
     <span class="save-indicator"><span class="save-dot"></span><span id="saveText">Salvo</span></span>
@@ -526,7 +658,7 @@
       '<td><span class="attr-pill">'+attr+'</span></td>'+
       '<td><input type="number" value="0" class="tabular pericia-input" data-path="pericias.'+slug+'.grad" data-skill="'+slug+'" data-attr="'+attr+'" style="width:52px"></td>'+
       '<td><input type="number" value="0" class="tabular pericia-input" data-path="pericias.'+slug+'.outros" data-skill="'+slug+'" data-attr="'+attr+'" style="width:52px"></td>'+
-      '<td class="row-total tabular" id="total-'+slug+'">+0</td>';
+      '<td class="row-total tabular rollable" id="total-'+slug+'" title="Clique para rolar">+0</td>';
     periciasBody.appendChild(tr);
   });
 
@@ -542,7 +674,7 @@
         f.options.forEach(function(o){ html += '<option value="'+o+'"'+(o===v?' selected':'')+'>'+o+'</option>'; });
         html += '</select></td>';
       } else if(f.type === 'computed'){
-        html += '<td class="row-total" data-computed="'+f.key+'">+0</td>';
+        html += '<td class="row-total rollable" data-computed="'+f.key+'" title="Clique para rolar">+0</td>';
       } else {
         html += '<td class="'+(f.nameCell?'name-cell':'')+(f.narrow?' narrow':'')+'"><input class="row-field tabular" type="'+(f.type||'text')+'" data-field="'+f.key+'" value="'+String(v).replace(/"/g,'&quot;')+'" style="'+(f.width?('width:'+f.width+'px'):'')+'"></td>';
       }
@@ -551,6 +683,7 @@
     tr.innerHTML = html;
     tr.querySelector('.row-remove').addEventListener('click', function(){ tr.remove(); scheduleSave(); });
     container.appendChild(tr);
+    if(opts.afterCreate) opts.afterCreate(tr);
     return tr;
   }
 
@@ -570,7 +703,36 @@
   var itensBody = document.getElementById('equipamento-body');
   var periciasCustomBody = document.getElementById('pericias-custom-body');
 
-  document.getElementById('add-arma').addEventListener('click', function(){ makeRow(armasBody, armaFields); scheduleSave(); });
+  function enhanceArmaRow(tr){
+    var nomeInput = tr.querySelector('[data-field="nome"]');
+    var bonusInput = tr.querySelector('[data-field="bonus"]');
+    var danoInput = tr.querySelector('[data-field="dano"]');
+    if(bonusInput){
+      var td1 = bonusInput.parentElement;
+      td1.style.display = 'flex'; td1.style.gap = '4px'; td1.style.alignItems = 'center';
+      var btn1 = document.createElement('button');
+      btn1.type = 'button'; btn1.className = 'small dice-inline-btn'; btn1.title = 'Rolar ataque'; btn1.textContent = '🎲';
+      btn1.addEventListener('click', function(){
+        var bonus = parseInt(bonusInput.value,10)||0;
+        var label = (nomeInput && nomeInput.value) ? nomeInput.value : 'Ataque';
+        rollD20Check(label, bonus);
+      });
+      td1.appendChild(btn1);
+    }
+    if(danoInput){
+      var td2 = danoInput.parentElement;
+      td2.style.display = 'flex'; td2.style.gap = '4px'; td2.style.alignItems = 'center';
+      var btn2 = document.createElement('button');
+      btn2.type = 'button'; btn2.className = 'small dice-inline-btn'; btn2.title = 'Rolar dano'; btn2.textContent = '🎲';
+      btn2.addEventListener('click', function(){
+        var label = (nomeInput && nomeInput.value) ? nomeInput.value + ' (dano)' : 'Dano';
+        rollDamageNotation(danoInput.value, label);
+      });
+      td2.appendChild(btn2);
+    }
+  }
+
+  document.getElementById('add-arma').addEventListener('click', function(){ makeRow(armasBody, armaFields, null, {afterCreate:enhanceArmaRow}); scheduleSave(); });
   document.getElementById('add-armadura').addEventListener('click', function(){ makeRow(armadurasBody, armaduraFields); scheduleSave(); });
   document.getElementById('add-item').addEventListener('click', function(){ makeRow(itensBody, itemFields); scheduleSave(); });
   document.getElementById('add-pericia').addEventListener('click', function(){ makeRow(periciasCustomBody, customPericiaFields, null, {className:'custom-pericia-row'}); scheduleSave(); });
@@ -582,6 +744,140 @@
     box.className = 'card spell-circle';
     box.innerHTML = '<span class="label">Círculo '+c+'</span><textarea data-path="magias.circulo'+idx+'" placeholder="Magias deste círculo, uma por linha..."></textarea>';
     spellGrid.appendChild(box);
+  });
+
+  var CONDITIONS = ['Abalado','Agarrado','Amedrontado','Atordoado','Caído','Cego','Confuso','Enfeitiçado','Enjoado','Envenenado','Exausto','Fatigado','Imóvel','Inconsciente','Invisível','Lento','Paralisado','Surdo'];
+  var conditionGrid = document.getElementById('condition-grid');
+  CONDITIONS.forEach(function(name){
+    var slug = name.toLowerCase().normalize('NFD').replace(new RegExp('[̀-ͯ]','g'),'').replace(/\s+/g,'_');
+    var label = document.createElement('label');
+    label.className = 'condition-chip';
+    label.innerHTML = '<input type="checkbox" data-path="condicoes.'+slug+'" class="condition-checkbox" data-name="'+name+'"><span>'+name+'</span>';
+    conditionGrid.appendChild(label);
+  });
+
+  function renderActiveConditions(){
+    var active = Array.prototype.filter.call(document.querySelectorAll('.condition-checkbox'), function(cb){ return cb.checked; });
+    var el = document.getElementById('active-conditions');
+    if(active.length === 0){ el.innerHTML = ''; el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    el.innerHTML = active.map(function(cb){ return '<span class="condition-tag">'+cb.getAttribute('data-name')+'</span>'; }).join('');
+  }
+  function syncConditionChips(){
+    document.querySelectorAll('.condition-checkbox').forEach(function(cb){
+      cb.closest('.condition-chip').classList.toggle('active', cb.checked);
+    });
+    renderActiveConditions();
+  }
+
+  function rollDie(sides){ return 1 + Math.floor(Math.random()*sides); }
+
+  var diceHistory = [];
+  function pushHistory(label, breakdown, total){
+    diceHistory.unshift({label:label, breakdown:breakdown, total:total});
+    if(diceHistory.length > 8) diceHistory.length = 8;
+    renderHistory();
+  }
+  function renderHistory(){
+    document.getElementById('dice-history').innerHTML = diceHistory.map(function(h){
+      return '<div class="dice-history-item"><span class="dhi-label">'+h.label+'</span><span class="dhi-breakdown">'+h.breakdown+'</span><span class="dhi-total">'+h.total+'</span></div>';
+    }).join('');
+  }
+  function showDiceResult(label, diceResults, modifier, total, errorMsg){
+    var el = document.getElementById('dice-result');
+    if(errorMsg){ el.innerHTML = '<div class="dice-error">'+errorMsg+'</div>'; return; }
+    var parts = diceResults.map(function(r){ return 'd'+r.sides+' <b>'+r.value+'</b>'; }).join(' + ');
+    var modStr = modifier ? (' '+(modifier>=0?'+':'')+modifier) : '';
+    el.innerHTML =
+      '<div class="dice-result-label">'+(label||'Rolagem')+'</div>'+
+      '<div class="dice-result-total">'+total+'</div>'+
+      '<div class="dice-result-breakdown">'+parts+modStr+'</div>';
+  }
+  function openDiceTray(){ document.getElementById('dice-tray').hidden = false; document.getElementById('dice-fab').setAttribute('aria-expanded','true'); }
+  function closeDiceTray(){ document.getElementById('dice-tray').hidden = true; document.getElementById('dice-fab').setAttribute('aria-expanded','false'); }
+  function toggleDiceTray(){ var t = document.getElementById('dice-tray'); if(t.hidden) openDiceTray(); else closeDiceTray(); }
+
+  function rollD20Check(label, bonus){
+    var r = rollDie(20);
+    var total = r + bonus;
+    showDiceResult(label, [{sides:20, value:r}], bonus, total);
+    pushHistory(label, 'd20('+r+') '+(bonus>=0?'+':'')+bonus, total);
+    openDiceTray();
+  }
+
+  function rollDamageNotation(spec, label){
+    var m = /^\s*(\d*)d(\d+)\s*([+-]\s*\d+)?\s*$/i.exec(spec||'');
+    if(!m){ showDiceResult(label, [], 0, null, 'Formato inválido — use algo como 2d6+3'); openDiceTray(); return; }
+    var count = m[1] ? parseInt(m[1],10) : 1;
+    var sides = parseInt(m[2],10);
+    var modv = m[3] ? parseInt(m[3].replace(/\s+/g,''),10) : 0;
+    var results = [];
+    for(var i=0;i<count;i++) results.push({sides:sides, value:rollDie(sides)});
+    var total = results.reduce(function(a,r){return a+r.value;},0) + modv;
+    showDiceResult(label, results, modv, total);
+    pushHistory(label, results.map(function(r){return 'd'+r.sides+'('+r.value+')';}).join(' + ')+(modv?(' '+(modv>=0?'+':'')+modv):''), total);
+    openDiceTray();
+  }
+
+  function findRollLabel(el){
+    var tr = el.closest('tr');
+    if(tr){
+      var nc = tr.querySelector('.name-cell');
+      if(nc) return nc.textContent.trim().replace(/\s+/g,' ');
+    }
+    var card = el.closest('.formula-card');
+    if(card){
+      var lbl = card.querySelector('.label');
+      if(lbl) return lbl.textContent.trim();
+    }
+    return 'Rolagem';
+  }
+
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('.rollable');
+    if(!el) return;
+    var bonus = parseInt(el.textContent.replace(/[^-0-9]/g,''),10) || 0;
+    rollD20Check(findRollLabel(el), bonus);
+  });
+
+  document.getElementById('dice-fab').addEventListener('click', toggleDiceTray);
+  document.getElementById('dice-close').addEventListener('click', closeDiceTray);
+
+  var dicePool = {4:0,6:0,8:0,10:0,12:0,20:0,100:0};
+  document.querySelectorAll('.die-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var sides = btn.getAttribute('data-sides');
+      dicePool[sides]++;
+      document.getElementById('count-'+sides).textContent = dicePool[sides];
+    });
+  });
+  document.getElementById('dice-clear').addEventListener('click', function(){
+    Object.keys(dicePool).forEach(function(s){ dicePool[s] = 0; document.getElementById('count-'+s).textContent = '0'; });
+    document.getElementById('dice-mod').value = 0;
+    document.getElementById('dice-result').innerHTML = '';
+  });
+  document.getElementById('dice-roll').addEventListener('click', function(){
+    var modv = parseInt(document.getElementById('dice-mod').value,10) || 0;
+    var allResults = [];
+    Object.keys(dicePool).forEach(function(s){
+      for(var i=0;i<dicePool[s];i++) allResults.push({sides:Number(s), value:rollDie(Number(s))});
+    });
+    if(allResults.length === 0 && modv === 0) return;
+    var total = allResults.reduce(function(a,r){return a+r.value;},0) + modv;
+    showDiceResult('Rolagem livre', allResults, modv, total);
+    var breakdown = allResults.map(function(r){return 'd'+r.sides+'('+r.value+')';}).join(' + ') + (modv ? (' '+(modv>=0?'+':'')+modv) : '');
+    pushHistory('Rolagem livre', breakdown, total);
+  });
+
+  document.querySelectorAll('.stepper-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var input = document.getElementById(btn.getAttribute('data-target'));
+      if(!input) return;
+      var val = (parseInt(input.value,10)||0) + parseInt(btn.getAttribute('data-delta'),10);
+      if(val < 0) val = 0;
+      input.value = val;
+      scheduleSave();
+    });
   });
 
   function recalc(){
@@ -718,11 +1014,12 @@
       if(val === undefined) return;
       if(el.type === 'checkbox') el.checked = !!val; else el.value = val;
     });
-    fillRows(armasBody, armaFields, obj.armas);
+    fillRows(armasBody, armaFields, obj.armas, {afterCreate:enhanceArmaRow});
     fillRows(armadurasBody, armaduraFields, obj.armaduras);
     fillRows(itensBody, itemFields, obj.itens);
     fillRows(periciasCustomBody, customPericiaFields, obj.periciasExtra, {className:'custom-pericia-row'});
     recalc();
+    syncConditionChips();
   }
 
   function persist(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(serialize())); }catch(e){} }
@@ -757,7 +1054,13 @@
   });
 
   document.addEventListener('input', function(e){ if(e.target.closest('.app')) scheduleSave(); });
-  document.addEventListener('change', function(e){ if(e.target.closest('.app')) scheduleSave(); });
+  document.addEventListener('change', function(e){
+    if(e.target.closest('.app')) scheduleSave();
+    if(e.target.classList.contains('condition-checkbox')){
+      e.target.closest('.condition-chip').classList.toggle('active', e.target.checked);
+      renderActiveConditions();
+    }
+  });
 
   document.querySelectorAll('.tab').forEach(function(tab){
     tab.addEventListener('click', function(){
@@ -803,6 +1106,7 @@
     document.getElementById('nivel').value = 1;
     armasBody.innerHTML=''; armadurasBody.innerHTML=''; itensBody.innerHTML=''; periciasCustomBody.innerHTML='';
     recalc();
+    syncConditionChips();
   });
 
   var fromHash = loadFromHash();
@@ -814,11 +1118,12 @@
   } else if(stored){
     apply(stored);
   } else {
-    makeRow(armasBody, armaFields);
+    makeRow(armasBody, armaFields, null, {afterCreate:enhanceArmaRow});
     makeRow(armadurasBody, armaduraFields);
     makeRow(itensBody, itemFields);
     for(var i=0;i<3;i++){ makeRow(periciasCustomBody, customPericiaFields, null, {className:'custom-pericia-row'}); }
     recalc();
+    syncConditionChips();
   }
 })();
 </script>
