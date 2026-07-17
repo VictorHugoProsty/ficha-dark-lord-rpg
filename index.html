@@ -152,6 +152,7 @@
   td.narrow{ width:1%; }
   .row-total{ font-family:var(--font-mono); font-weight:700; text-align:center; color:var(--accent); display:block; }
   .chk{ display:flex; align-items:center; justify-content:center; }
+  .chk input[type="checkbox"]{ width:18px; height:18px; accent-color:var(--accent); }
   .attr-pill{ display:inline-block; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; }
   .skill-flags{ font-size:10px; color:var(--accent-2); margin-left:3px; }
   .remove-btn{ color:var(--accent); border-color:var(--accent); background:transparent; }
@@ -259,6 +260,9 @@
   .dice-result{ min-height:20px; text-align:center; padding:10px 0; border-top:1px solid var(--line); }
   .dice-result-label{ font-size:11.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em; }
   .dice-result-total{ font-family:var(--font-mono); font-size:34px; font-weight:700; color:var(--accent); line-height:1.2; }
+  .dice-result-total.rolling{ color:var(--ink-faint); animation:dice-pulse .14s steps(2) infinite; }
+  @media (prefers-reduced-motion: reduce){ .dice-result-total.rolling{ animation:none; } }
+  @keyframes dice-pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.55; } }
   .dice-result-breakdown{ font-size:12.5px; color:var(--ink-soft); font-family:var(--font-mono); }
   .dice-error{ color:var(--accent); font-size:12.5px; }
   .dice-history{ border-top:1px solid var(--line); padding-top:8px; margin-top:4px; display:flex; flex-direction:column; gap:5px; max-height:140px; overflow-y:auto; }
@@ -375,16 +379,16 @@
 
   <!-- PERICIAS -->
   <section class="panel" id="panel-pericias">
-    <div class="section-title">Perícias <span class="hint">Total = graduação + habilidade + outros</span></div>
+    <div class="section-title">Perícias <span class="hint">Total = (treinado? ½ nível) + habilidade + outros</span></div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Perícia</th><th>Habilid.</th><th>Grad.</th><th>Outros</th><th>Total</th></tr></thead>
+        <thead><tr><th>Perícia</th><th>Habilid.</th><th>Treinado</th><th>Outros</th><th>Total</th></tr></thead>
         <tbody id="pericias-body"></tbody>
         <tbody id="pericias-custom-body"></tbody>
       </table>
     </div>
     <button class="add-row-btn small" id="add-pericia">+ Adicionar perícia</button>
-    <div class="pericias-legend">‡ penalidade de armadura aplicável &middot; * somente treinado (graduação &gt; 0)</div>
+    <div class="pericias-legend">‡ penalidade de armadura aplicável &middot; * só é possível usar se treinado</div>
   </section>
 
   <!-- COMBATE -->
@@ -725,7 +729,7 @@
     tr.innerHTML =
       '<td class="name-cell">'+nameCell+(flags?'<span class="skill-flags">'+flags+'</span>':'')+'</td>'+
       '<td><span class="attr-pill">'+attr+'</span></td>'+
-      '<td><input type="number" value="0" class="tabular pericia-input" data-path="pericias.'+slug+'.grad" data-skill="'+slug+'" data-attr="'+attr+'" style="width:52px"></td>'+
+      '<td class="chk"><input type="checkbox" class="pericia-input" data-path="pericias.'+slug+'.treinado" data-skill="'+slug+'" data-attr="'+attr+'"></td>'+
       '<td><input type="number" value="0" class="tabular pericia-input" data-path="pericias.'+slug+'.outros" data-skill="'+slug+'" data-attr="'+attr+'" style="width:52px"></td>'+
       '<td class="row-total tabular rollable" id="total-'+slug+'" title="Clique para rolar">+0</td>';
     periciasBody.appendChild(tr);
@@ -744,6 +748,8 @@
         html += '</select></td>';
       } else if(f.type === 'computed'){
         html += '<td class="row-total rollable" data-computed="'+f.key+'" title="Clique para rolar">+0</td>';
+      } else if(f.type === 'checkbox'){
+        html += '<td class="chk"><input type="checkbox" class="row-field" data-field="'+f.key+'"'+(v?' checked':'')+'></td>';
       } else {
         html += '<td class="'+(f.nameCell?'name-cell':'')+(f.narrow?' narrow':'')+'"><input class="row-field tabular" type="'+(f.type||'text')+'" data-field="'+f.key+'" value="'+String(v).replace(/"/g,'&quot;')+'" style="'+(f.width?('width:'+f.width+'px'):'')+'"></td>';
       }
@@ -762,7 +768,7 @@
   var customPericiaFields = [
     {key:'nome', nameCell:true, width:150},
     {key:'attr', type:'select', options:['FOR','DES','CON','INT','SAB','CAR'], narrow:true},
-    {key:'grad', type:'number', width:52},
+    {key:'treinado', type:'checkbox'},
     {key:'outros', type:'number', width:52},
     {key:'total', type:'computed'}
   ];
@@ -869,23 +875,44 @@
   function rollD20Check(label, bonus){
     var r = rollDie(20);
     var total = r + bonus;
-    showDiceResult(label, [{sides:20, value:r}], bonus, total);
-    pushHistory(label, 'd20('+r+') '+(bonus>=0?'+':'')+bonus, total);
-    openDiceTray();
+    presentRoll(label, [{sides:20, value:r}], bonus, total);
   }
 
   function rollDamageNotation(spec, label){
     var m = /^\s*(\d*)d(\d+)\s*([+-]\s*\d+)?\s*$/i.exec(spec||'');
-    if(!m){ showDiceResult(label, [], 0, null, 'Formato inválido — use algo como 2d6+3'); openDiceTray(); return; }
+    if(!m){ presentRoll(label, [], 0, null, 'Formato inválido — use algo como 2d6+3'); return; }
     var count = m[1] ? parseInt(m[1],10) : 1;
     var sides = parseInt(m[2],10);
     var modv = m[3] ? parseInt(m[3].replace(/\s+/g,''),10) : 0;
     var results = [];
     for(var i=0;i<count;i++) results.push({sides:sides, value:rollDie(sides)});
     var total = results.reduce(function(a,r){return a+r.value;},0) + modv;
-    showDiceResult(label, results, modv, total);
-    pushHistory(label, results.map(function(r){return 'd'+r.sides+'('+r.value+')';}).join(' + ')+(modv?(' '+(modv>=0?'+':'')+modv):''), total);
+    presentRoll(label, results, modv, total);
+  }
+
+  var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function finishRoll(label, diceResults, modifier, total){
+    showDiceResult(label, diceResults, modifier, total);
+    var breakdown = diceResults.map(function(r){ return 'd'+r.sides+'('+r.value+')'; }).join(' + ') + (modifier ? (' '+(modifier>=0?'+':'')+modifier) : '');
+    pushHistory(label, breakdown, total);
+  }
+
+  function presentRoll(label, diceResults, modifier, total, errorMsg){
     openDiceTray();
+    if(errorMsg){ showDiceResult(label, [], 0, null, errorMsg); return; }
+    if(reduceMotion || diceResults.length === 0){ finishRoll(label, diceResults, modifier, total); return; }
+    var el = document.getElementById('dice-result');
+    var ticks = 0, maxTicks = 9;
+    var timer = setInterval(function(){
+      ticks++;
+      var fakeParts = diceResults.map(function(r){ return 'd'+r.sides+' <b>'+(1+Math.floor(Math.random()*r.sides))+'</b>'; }).join(' + ');
+      el.innerHTML =
+        '<div class="dice-result-label">'+(label||'Rolagem')+'</div>'+
+        '<div class="dice-result-total rolling">&hellip;</div>'+
+        '<div class="dice-result-breakdown">'+fakeParts+'</div>';
+      if(ticks >= maxTicks){ clearInterval(timer); finishRoll(label, diceResults, modifier, total); }
+    }, 70);
   }
 
   function findRollLabel(el){
@@ -933,9 +960,7 @@
     });
     if(allResults.length === 0 && modv === 0) return;
     var total = allResults.reduce(function(a,r){return a+r.value;},0) + modv;
-    showDiceResult('Rolagem livre', allResults, modv, total);
-    var breakdown = allResults.map(function(r){return 'd'+r.sides+'('+r.value+')';}).join(' + ') + (modv ? (' '+(modv>=0?'+':'')+modv) : '');
-    pushHistory('Rolagem livre', breakdown, total);
+    presentRoll('Rolagem livre', allResults, modv, total);
   });
 
   document.querySelectorAll('.stepper-btn').forEach(function(btn){
@@ -1005,18 +1030,18 @@
 
     document.querySelectorAll('.pericia-input').forEach(function(el){
       var skill = el.getAttribute('data-skill'); var attr = el.getAttribute('data-attr');
-      var grad = Number(document.querySelector('[data-path="pericias.'+skill+'.grad"]').value)||0;
+      var treinado = document.querySelector('[data-path="pericias.'+skill+'.treinado"]').checked;
       var outros = Number(document.querySelector('[data-path="pericias.'+skill+'.outros"]').value)||0;
-      var total = grad + attrMods[attr] + outros;
+      var total = (treinado ? metadeNivel : 0) + attrMods[attr] + outros;
       var cell = document.getElementById('total-'+skill);
       if(cell) cell.textContent = fmt(total);
     });
 
     document.querySelectorAll('.custom-pericia-row').forEach(function(tr){
       var attrSel = tr.querySelector('[data-field="attr"]');
-      var grad = Number(tr.querySelector('[data-field="grad"]').value)||0;
+      var treinado = tr.querySelector('[data-field="treinado"]').checked;
       var outros = Number(tr.querySelector('[data-field="outros"]').value)||0;
-      var total = grad + attrMods[attrSel.value] + outros;
+      var total = (treinado ? metadeNivel : 0) + attrMods[attrSel.value] + outros;
       tr.querySelector('[data-computed="total"]').textContent = fmt(total);
     });
 
@@ -1040,6 +1065,7 @@
       fields.forEach(function(f){
         if(f.type === 'computed') return;
         var el = tr.querySelector('[data-field="'+f.key+'"]');
+        if(f.type === 'checkbox'){ obj[f.key] = el ? el.checked : false; return; }
         obj[f.key] = el ? el.value : '';
       });
       return obj;
