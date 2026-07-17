@@ -42,6 +42,8 @@
   button:focus-visible, a:focus-visible, [tabindex]:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
   button.ghost{ background:transparent; }
   button.small{ padding:4px 8px; font-size:12px; }
+  button.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700; }
+  button.primary:hover{ filter:brightness(1.1); }
   .label{
     display:block; font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
     color:var(--ink-faint); margin-bottom:3px; font-weight:600;
@@ -251,7 +253,47 @@
   .dhi-label{ flex:1; color:var(--ink-soft); }
   .dhi-breakdown{ font-family:var(--font-mono); }
   .dhi-total{ font-family:var(--font-mono); font-weight:700; color:var(--accent); min-width:28px; text-align:right; }
+
+  .auth-overlay{
+    position:fixed; inset:0; z-index:20; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; padding:24px; overflow-y:auto;
+  }
+  .auth-overlay[hidden]{ display:none; }
+  .auth-card{
+    width:100%; max-width:380px; background:var(--bg-raised); border:1px solid var(--line);
+    border-radius:10px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.6), 0 0 30px var(--accent-glow);
+  }
+  .auth-title{ font-family:var(--font-display); font-size:22px; margin:4px 0 16px; }
+  .auth-note{ font-size:12.5px; color:var(--ink-soft); background:var(--bg-sunken); border-radius:6px; padding:10px 12px; margin-bottom:14px; line-height:1.5; }
+  .auth-card .field{ margin-bottom:12px; }
+  .auth-error{ font-size:12px; color:var(--accent); min-height:16px; margin-bottom:8px; }
+  .auth-actions{ display:flex; gap:8px; margin-bottom:6px; }
+  .auth-actions button{ flex:1; }
+  .auth-forgot{ width:100%; margin-bottom:14px; }
+  .auth-guest-btn{ width:100%; border-top:1px solid var(--line); padding-top:14px; margin-top:4px; }
+  .account-badge{ display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--ink-faint); }
 </style>
+
+<div id="auth-overlay" class="auth-overlay">
+  <div class="auth-card">
+    <div class="eyebrow"><span>&#9760;</span> Dark Lord RPG</div>
+    <h2 class="auth-title">Entrar</h2>
+    <div id="auth-unavailable" class="auth-note">
+      Login com nuvem ainda não está configurado nesta versão, ou não está disponível neste navegador. Você pode continuar usando a ficha só neste aparelho.
+    </div>
+    <div id="auth-form-block" hidden>
+      <div class="field"><span class="label">E-mail</span><input type="email" id="auth-email" autocomplete="username"></div>
+      <div class="field"><span class="label">Senha</span><input type="password" id="auth-password" autocomplete="current-password"></div>
+      <div id="auth-error" class="auth-error"></div>
+      <div class="auth-actions">
+        <button type="button" id="auth-signin" class="primary">Entrar</button>
+        <button type="button" id="auth-signup" class="ghost">Criar conta</button>
+      </div>
+      <button type="button" id="auth-reset" class="small ghost auth-forgot">Esqueci minha senha</button>
+    </div>
+    <button type="button" id="auth-guest" class="small ghost auth-guest-btn">Continuar sem conta (só neste aparelho)</button>
+  </div>
+</div>
 
 <div class="app">
   <div class="masthead">
@@ -594,6 +636,11 @@
 
   <div class="footer-bar">
     <span class="save-indicator"><span class="save-dot"></span><span id="saveText">Salvo</span></span>
+    <span id="account-badge" class="account-badge" hidden>
+      <span id="account-email"></span>
+      <button type="button" id="auth-logout" class="small ghost">Sair</button>
+    </span>
+    <button type="button" id="btn-show-login" class="small ghost">Entrar / Criar conta</button>
     <button id="btn-share">Link com dados</button>
     <button id="btn-export">Exportar</button>
     <button id="btn-import">Importar</button>
@@ -1143,5 +1190,123 @@
     recalc();
     syncConditionChips();
   }
+
+  window.__ficha = { serialize:serialize, apply:apply, flashSaveText:flashSaveText };
+
+  var GUEST_KEY = 'dark-lord-rpg-guest';
+  var authOverlay = document.getElementById('auth-overlay');
+  if(authOverlay && localStorage.getItem(GUEST_KEY) === '1'){ authOverlay.hidden = true; }
+  var guestBtn = document.getElementById('auth-guest');
+  if(guestBtn){
+    guestBtn.addEventListener('click', function(){
+      localStorage.setItem(GUEST_KEY, '1');
+      if(authOverlay) authOverlay.hidden = true;
+    });
+  }
+  var showLoginBtn = document.getElementById('btn-show-login');
+  if(showLoginBtn){
+    showLoginBtn.addEventListener('click', function(){ if(authOverlay) authOverlay.hidden = false; });
+  }
 })();
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    onAuthStateChanged, signOut, sendPasswordResetEmail
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ===================================================================
+  // COLE AQUI A CONFIGURAÇÃO DO SEU PROJETO FIREBASE (Console > Configurações do projeto > Seus apps > SDK)
+  var firebaseConfig = {
+    apiKey: "COLE_AQUI",
+    authDomain: "COLE_AQUI",
+    projectId: "COLE_AQUI",
+    storageBucket: "COLE_AQUI",
+    messagingSenderId: "COLE_AQUI",
+    appId: "COLE_AQUI"
+  };
+  // ===================================================================
+
+  function translateAuthError(code){
+    var map = {
+      'auth/invalid-email':'E-mail inválido.',
+      'auth/user-not-found':'Conta não encontrada.',
+      'auth/wrong-password':'Senha incorreta.',
+      'auth/email-already-in-use':'Já existe uma conta com esse e-mail — tente Entrar.',
+      'auth/weak-password':'Senha muito curta (mínimo 6 caracteres).',
+      'auth/invalid-credential':'E-mail ou senha incorretos.',
+      'auth/missing-email':'Digite seu e-mail.'
+    };
+    return map[code] || ('Erro: ' + code);
+  }
+
+  var overlay = document.getElementById('auth-overlay');
+  var formError = document.getElementById('auth-error');
+  var firebaseReady = firebaseConfig.apiKey !== 'COLE_AQUI';
+
+  if(firebaseReady){
+    try{
+      var app = initializeApp(firebaseConfig);
+      var auth = getAuth(app);
+      var db = getFirestore(app);
+
+      document.getElementById('auth-unavailable').hidden = true;
+      document.getElementById('auth-form-block').hidden = false;
+
+      document.getElementById('auth-signin').addEventListener('click', function(){
+        formError.textContent = '';
+        var email = document.getElementById('auth-email').value.trim();
+        var pass = document.getElementById('auth-password').value;
+        signInWithEmailAndPassword(auth, email, pass).catch(function(err){ formError.textContent = translateAuthError(err.code); });
+      });
+      document.getElementById('auth-signup').addEventListener('click', function(){
+        formError.textContent = '';
+        var email = document.getElementById('auth-email').value.trim();
+        var pass = document.getElementById('auth-password').value;
+        createUserWithEmailAndPassword(auth, email, pass).catch(function(err){ formError.textContent = translateAuthError(err.code); });
+      });
+      document.getElementById('auth-reset').addEventListener('click', function(){
+        formError.textContent = '';
+        var email = document.getElementById('auth-email').value.trim();
+        if(!email){ formError.textContent = 'Digite seu e-mail para receber o link de redefinição.'; return; }
+        sendPasswordResetEmail(auth, email).then(function(){ formError.textContent = 'E-mail de redefinição enviado.'; })
+          .catch(function(err){ formError.textContent = translateAuthError(err.code); });
+      });
+      document.getElementById('auth-logout').addEventListener('click', function(){ signOut(auth); });
+
+      var cloudSaveTimer = null;
+      function scheduleCloudSave(){
+        if(!auth.currentUser) return;
+        clearTimeout(cloudSaveTimer);
+        cloudSaveTimer = setTimeout(function(){
+          setDoc(doc(db,'fichas',auth.currentUser.uid), window.__ficha.serialize()).catch(function(){});
+        }, 800);
+      }
+      document.addEventListener('input', function(e){ if(e.target.closest('.app')) scheduleCloudSave(); });
+      document.addEventListener('change', function(e){ if(e.target.closest('.app')) scheduleCloudSave(); });
+
+      onAuthStateChanged(auth, function(user){
+        if(user){
+          overlay.hidden = true;
+          document.getElementById('account-badge').hidden = false;
+          document.getElementById('account-email').textContent = user.email;
+          getDoc(doc(db,'fichas',user.uid)).then(function(snap){
+            if(snap.exists()){
+              window.__ficha.apply(snap.data());
+              window.__ficha.flashSaveText('Ficha carregada da nuvem!');
+            }
+          }).catch(function(){});
+        } else {
+          document.getElementById('account-badge').hidden = true;
+          if(localStorage.getItem('dark-lord-rpg-guest') !== '1'){ overlay.hidden = false; }
+        }
+      });
+    }catch(e){
+      document.getElementById('auth-unavailable').hidden = false;
+      document.getElementById('auth-form-block').hidden = true;
+    }
+  }
 </script>
