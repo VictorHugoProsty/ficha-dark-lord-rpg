@@ -18,9 +18,8 @@
     --font-mono:'SF Mono','Cascadia Mono','JetBrains Mono','Courier New',monospace;
     --radius:3px;
     --atmo-bg:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Cg fill='%233a1216' opacity='0.35'%3E%3Cpolygon points='230,0 245,90 220,95 210,10'/%3E%3Cpolygon points='270,0 280,100 260,102 255,5'/%3E%3Cpolygon points='330,0 320,100 340,102 345,5'/%3E%3Cpolygon points='370,0 355,90 380,95 390,10'/%3E%3C/g%3E%3Cg fill='%233a1216' opacity='0.35'%3E%3Cpolygon points='230,600 245,510 220,505 210,590'/%3E%3Cpolygon points='270,600 280,500 260,498 255,595'/%3E%3Cpolygon points='330,600 320,500 340,498 345,595'/%3E%3Cpolygon points='370,600 355,510 380,505 390,590'/%3E%3C/g%3E%3Cg fill='none' stroke='%23e5424f' stroke-width='1.4' stroke-linecap='round' opacity='0.16'%3E%3Cpath d='M300,230 L260,160 L280,90 L230,30'/%3E%3Cpath d='M300,230 L340,150 L310,80 L360,20'/%3E%3Cpath d='M300,370 L260,440 L280,510 L230,570'/%3E%3Cpath d='M300,370 L340,450 L310,520 L360,580'/%3E%3Cpath d='M230,300 L160,270 L90,290 L20,250'/%3E%3Cpath d='M370,300 L440,330 L510,300 L580,340'/%3E%3C/g%3E%3Cpath d='M120,300 Q300,180 480,300 Q300,420 120,300 Z' fill='%232b0a0d' stroke='%23e5424f' stroke-width='2' opacity='0.9'/%3E%3Ccircle cx='300' cy='300' r='70' fill='%23170608'/%3E%3Cpath d='M300,300 A45,45 0 1 1 335,268 A32,32 0 1 1 300,240 A20,20 0 1 1 322,255 A10,10 0 1 1 300,270' fill='none' stroke='%23e5424f' stroke-width='4' stroke-linecap='round' opacity='0.85'/%3E%3C/svg%3E"),
-      repeating-conic-gradient(from 0deg at 50% 42%, rgba(229,66,79,0.14) 0deg 3deg, transparent 3deg 15deg),
-      radial-gradient(ellipse 70% 60% at 50% 42%, rgba(229,66,79,0.16), transparent 65%);
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'%3E%3Cg fill='none' stroke='%23e5424f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' opacity='0.38'%3E%3Cpath d='M240,200 L225,140 L245,90 L220,20'/%3E%3Cpath d='M240,200 L280,160 L300,100 L340,40'/%3E%3Cpath d='M280,240 L340,220 L400,250 L470,230'/%3E%3Cpath d='M280,280 L320,330 L360,310 L400,370'/%3E%3Cpath d='M240,280 L255,340 L235,390 L250,460'/%3E%3Cpath d='M200,280 L160,320 L180,370 L140,430'/%3E%3Cpath d='M200,240 L140,260 L80,235 L10,255'/%3E%3Cpath d='M200,200 L160,150 L180,100 L130,50'/%3E%3Cpath d='M225,140 L195,120'/%3E%3Cpath d='M340,220 L360,180'/%3E%3Cpath d='M255,340 L290,355'/%3E%3Cpath d='M140,260 L120,290'/%3E%3C/g%3E%3Cpath d='M180,240 Q240,205 300,240 Q240,275 180,240 Z' fill='%232b0a0d' stroke='%23e5424f' stroke-width='2' opacity='0.65'/%3E%3Ccircle cx='240' cy='240' r='26' fill='%23170608' opacity='0.9'/%3E%3Cpath d='M240,240 A18,18 0 1 1 258,222 A12,12 0 1 1 240,210 A6,6 0 1 1 249,216' fill='none' stroke='%23e5424f' stroke-width='2.4' stroke-linecap='round' opacity='0.8'/%3E%3C/svg%3E"),
+      radial-gradient(ellipse 120% 90% at 50% 40%, transparent 40%, rgba(0,0,0,0.35) 100%);
   }
 
   *{box-sizing:border-box;}
@@ -35,9 +34,9 @@
     position:fixed; inset:0; z-index:-1; pointer-events:none;
     background-color:var(--bg);
     background-image:var(--atmo-bg);
-    background-repeat:no-repeat;
-    background-position:50% 42%;
-    background-size:min(640px,88vmin) min(640px,88vmin), 100% 100%, 100% 100%;
+    background-repeat:repeat, no-repeat;
+    background-position:0 0, center;
+    background-size:480px 480px, 100% 100%;
   }
   ::selection{ background:var(--accent); color:var(--accent-ink); }
   h1,h2,h3{ font-family:var(--font-display); text-wrap:balance; margin:0; }
@@ -271,8 +270,8 @@
   .auth-overlay{
     position:fixed; inset:0; z-index:20;
     background-color:var(--bg); background-image:var(--atmo-bg);
-    background-repeat:no-repeat; background-position:50% 42%;
-    background-size:min(640px,88vmin) min(640px,88vmin), 100% 100%, 100% 100%;
+    background-repeat:repeat, no-repeat; background-position:0 0, center;
+    background-size:480px 480px, 100% 100%;
     display:flex; align-items:center; justify-content:center; padding:24px; overflow-y:auto;
   }
   .auth-overlay[hidden]{ display:none; }
