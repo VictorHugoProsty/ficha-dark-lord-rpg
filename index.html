@@ -93,6 +93,21 @@
   }
   .name-input:focus{ outline:none; border-bottom-color:var(--accent); }
   .name-input::placeholder{ color:var(--ink-faint); opacity:.7; }
+  .identity-row{ display:flex; align-items:center; gap:16px; }
+  @media (max-width:520px){ .identity-row{ gap:12px; } }
+  .avatar-frame{
+    position:relative; width:76px; height:76px; border-radius:50%; flex:0 0 auto;
+    border:2px solid var(--accent); background:var(--bg-sunken);
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    cursor:pointer; box-shadow:0 0 14px var(--accent-glow);
+  }
+  .avatar-frame img{ width:100%; height:100%; object-fit:cover; }
+  .avatar-placeholder{ font-size:28px; color:var(--ink-faint); }
+  .avatar-remove{
+    position:absolute; top:-3px; right:-3px; width:20px; height:20px; padding:0;
+    border-radius:50%; background:var(--accent); color:var(--accent-ink); border:none;
+    font-size:13px; line-height:1; cursor:pointer;
+  }
   .id-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:14px; }
   @media (max-width:760px){ .id-grid{ grid-template-columns:repeat(2,1fr); } }
   @media (min-width:761px) and (max-width:980px){ .id-grid{ grid-template-columns:repeat(3,1fr); } }
@@ -342,7 +357,16 @@
   <div class="masthead">
     <div class="masthead-inner">
       <div class="eyebrow"><span>&#9760;</span> Ficha de Aventureiro &middot; Dark Lord RPG</div>
-      <input class="name-input" data-path="id.nome" placeholder="Nome do personagem" autocomplete="off">
+      <div class="identity-row">
+        <div class="avatar-frame" id="avatar-frame" title="Clique para escolher uma imagem">
+          <img id="avatar-img" alt="Avatar do personagem" hidden>
+          <span class="avatar-placeholder" id="avatar-placeholder">&#9760;</span>
+          <button type="button" class="avatar-remove" id="avatar-remove" title="Remover imagem" aria-label="Remover imagem" hidden>&times;</button>
+        </div>
+        <input class="name-input" data-path="id.nome" placeholder="Nome do personagem" autocomplete="off">
+      </div>
+      <input type="hidden" id="avatar-data" data-path="perfil.avatar" value="">
+      <input type="file" id="avatar-file" accept="image/*" style="display:none">
       <div class="id-grid">
         <div class="field"><span class="label">Jogador</span><input data-path="id.jogador" autocomplete="off"></div>
         <div class="field"><span class="label">Raça</span><input data-path="id.raca" autocomplete="off"></div>
@@ -963,6 +987,55 @@
   document.getElementById('dice-fab').addEventListener('click', toggleDiceTray);
   document.getElementById('dice-close').addEventListener('click', closeDiceTray);
 
+  function syncAvatarDisplay(){
+    var dataInput = document.getElementById('avatar-data');
+    var val = dataInput ? dataInput.value : '';
+    var img = document.getElementById('avatar-img');
+    var placeholder = document.getElementById('avatar-placeholder');
+    var removeBtn = document.getElementById('avatar-remove');
+    if(val){
+      img.src = val; img.hidden = false;
+      placeholder.hidden = true; removeBtn.hidden = false;
+    } else {
+      img.src = ''; img.hidden = true;
+      placeholder.hidden = false; removeBtn.hidden = true;
+    }
+  }
+  function handleAvatarFile(file){
+    if(!file || !/^image\//.test(file.type)) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var size = 320;
+        var canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        var ctx = canvas.getContext('2d');
+        var scale = Math.max(size/img.width, size/img.height);
+        var w = img.width*scale, h = img.height*scale;
+        ctx.drawImage(img, (size-w)/2, (size-h)/2, w, h);
+        document.getElementById('avatar-data').value = canvas.toDataURL('image/jpeg', 0.82);
+        syncAvatarDisplay();
+        scheduleSave();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  document.getElementById('avatar-frame').addEventListener('click', function(){
+    document.getElementById('avatar-file').click();
+  });
+  document.getElementById('avatar-file').addEventListener('change', function(e){
+    handleAvatarFile(e.target.files[0]);
+    e.target.value = '';
+  });
+  document.getElementById('avatar-remove').addEventListener('click', function(e){
+    e.stopPropagation();
+    document.getElementById('avatar-data').value = '';
+    syncAvatarDisplay();
+    scheduleSave();
+  });
+
   var dicePool = {4:0,6:0,8:0,10:0,12:0,20:0,100:0};
   document.querySelectorAll('.die-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -1139,6 +1212,7 @@
     fillRows(periciasCustomBody, customPericiaFields, obj.periciasExtra, {className:'custom-pericia-row'});
     recalc();
     syncConditionChips();
+    syncAvatarDisplay();
   }
 
   function persist(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(serialize())); }catch(e){} }
@@ -1238,6 +1312,7 @@
     armasBody.innerHTML=''; armadurasBody.innerHTML=''; itensBody.innerHTML=''; periciasCustomBody.innerHTML='';
     recalc();
     syncConditionChips();
+    syncAvatarDisplay();
   });
 
   var fromHash = loadFromHash();
@@ -1255,6 +1330,7 @@
     for(var i=0;i<3;i++){ makeRow(periciasCustomBody, customPericiaFields, null, {className:'custom-pericia-row'}); }
     recalc();
     syncConditionChips();
+    syncAvatarDisplay();
   }
 
   window.__ficha = { serialize:serialize, apply:apply, flashSaveText:flashSaveText };
