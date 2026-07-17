@@ -176,6 +176,8 @@
 
   .saves-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }
   @media (max-width:720px){ .saves-grid{ grid-template-columns:1fr; } }
+  .bonus-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:6px; }
+  @media (max-width:720px){ .bonus-grid{ grid-template-columns:1fr; } }
 
   .table-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:6px; background:var(--bg-raised); }
   table{ border-collapse:collapse; width:100%; min-width:560px; }
@@ -459,14 +461,27 @@
       </div>
     </div>
 
-    <div class="section-title">Bônus Temporário <span class="hint">ex.: modo elemental, bênção, poção — soma em tudo</span></div>
-    <div class="card" style="padding:14px; margin-bottom:6px;">
-      <div class="field" style="margin-bottom:10px; max-width:320px;"><span class="label">Origem</span><input data-path="combat.bonusTempOrigem" placeholder="ex.: Modo Elemental — Fogo"></div>
-      <div class="row-flex">
-        <div class="field" style="max-width:110px;"><span class="label">CA</span><input type="number" value="0" class="tabular" data-path="combat.bonusTempCA"></div>
-        <div class="field" style="max-width:110px;"><span class="label">Ataque</span><input type="number" value="0" class="tabular" data-path="combat.bonusTempAtaque"></div>
-        <div class="field" style="max-width:110px;"><span class="label">Perícias</span><input type="number" value="0" class="tabular" data-path="combat.bonusTempPericias"></div>
-        <div class="field" style="max-width:110px;"><span class="label">Resistências</span><input type="number" value="0" class="tabular" data-path="combat.bonusTempResist"></div>
+    <div class="section-title">Bônus Ativos <span class="hint">soma em CA, Ataque, Perícias e Resistências — os dois acumulam</span></div>
+    <div class="bonus-grid">
+      <div class="card" style="padding:14px;">
+        <span class="label" style="display:block; margin-bottom:8px;">Bônus Temporário</span>
+        <div class="field" style="margin-bottom:10px;"><span class="label">Origem</span><input data-path="combat.bonusTempOrigem" placeholder="ex.: Bênção, poção..."></div>
+        <div class="row-flex">
+          <div class="field" style="max-width:100px;"><span class="label">CA</span><input type="number" value="0" class="tabular" data-path="combat.bonusTempCA"></div>
+          <div class="field" style="max-width:100px;"><span class="label">Ataque</span><input type="number" value="0" class="tabular" data-path="combat.bonusTempAtaque"></div>
+          <div class="field" style="max-width:100px;"><span class="label">Perícias</span><input type="number" value="0" class="tabular" data-path="combat.bonusTempPericias"></div>
+          <div class="field" style="max-width:100px;"><span class="label">Resist.</span><input type="number" value="0" class="tabular" data-path="combat.bonusTempResist"></div>
+        </div>
+      </div>
+      <div class="card" style="padding:14px;">
+        <span class="label" style="display:block; margin-bottom:8px;">Bônus Elemental</span>
+        <div class="field" style="margin-bottom:10px;"><span class="label">Origem</span><input data-path="combat.bonusElemOrigem" placeholder="ex.: Modo Elemental — Fogo"></div>
+        <div class="row-flex">
+          <div class="field" style="max-width:100px;"><span class="label">CA</span><input type="number" value="0" class="tabular" data-path="combat.bonusElemCA"></div>
+          <div class="field" style="max-width:100px;"><span class="label">Ataque</span><input type="number" value="0" class="tabular" data-path="combat.bonusElemAtaque"></div>
+          <div class="field" style="max-width:100px;"><span class="label">Perícias</span><input type="number" value="0" class="tabular" data-path="combat.bonusElemPericias"></div>
+          <div class="field" style="max-width:100px;"><span class="label">Resist.</span><input type="number" value="0" class="tabular" data-path="combat.bonusElemResist"></div>
+        </div>
       </div>
     </div>
 
@@ -1142,6 +1157,10 @@
     var bonusTempAtaque = Number(document.querySelector('[data-path="combat.bonusTempAtaque"]').value)||0;
     var bonusTempPericias = Number(document.querySelector('[data-path="combat.bonusTempPericias"]').value)||0;
     var bonusTempResist = Number(document.querySelector('[data-path="combat.bonusTempResist"]').value)||0;
+    bonusTempCA += Number(document.querySelector('[data-path="combat.bonusElemCA"]').value)||0;
+    bonusTempAtaque += Number(document.querySelector('[data-path="combat.bonusElemAtaque"]').value)||0;
+    bonusTempPericias += Number(document.querySelector('[data-path="combat.bonusElemPericias"]').value)||0;
+    bonusTempResist += Number(document.querySelector('[data-path="combat.bonusElemResist"]').value)||0;
 
     var bonusArmadura = Number(document.querySelector('[data-path="ca.bonusArmadura"]').value)||0;
     var bonusEscudo = Number(document.querySelector('[data-path="ca.bonusEscudo"]').value)||0;
