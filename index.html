@@ -190,7 +190,7 @@
   .pericias-table{ table-layout:fixed; }
   .pericias-table td.name-cell{ overflow:hidden; }
   .chk input[type="checkbox"]{ width:18px; height:18px; accent-color:var(--accent); }
-  .attr-pill{ display:inline-block; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; }
+  .attr-pill{ display:inline-block; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; font-family:var(--font-mono); white-space:nowrap; }
   .skill-flags{ font-size:10px; color:var(--accent-2); margin-left:3px; }
   .remove-btn{ color:var(--accent); border-color:var(--accent); background:transparent; }
   .add-row-btn{ margin-top:10px; }
@@ -432,7 +432,7 @@
     <div class="section-title">Perícias <span class="hint">Total = (treinado? ½ nível) + habilidade + outros</span></div>
     <div class="table-wrap">
       <table class="pericias-table">
-        <thead><tr><th style="width:auto">Perícia</th><th style="width:70px">Habilid.</th><th style="width:80px">Treinado</th><th style="width:80px">Outros</th><th style="width:70px">Total</th></tr></thead>
+        <thead><tr><th style="width:auto">Perícia</th><th style="width:88px">Habilid.</th><th style="width:80px">Treinado</th><th style="width:80px">Outros</th><th style="width:70px">Total</th></tr></thead>
         <tbody id="pericias-body"></tbody>
         <tbody id="pericias-custom-body"></tbody>
       </table>
@@ -779,7 +779,7 @@
       : name;
     tr.innerHTML =
       '<td class="name-cell">'+nameCell+(flags?'<span class="skill-flags">'+flags+'</span>':'')+'</td>'+
-      '<td><span class="attr-pill">'+attr+'</span></td>'+
+      '<td><span class="attr-pill" data-attr-display="'+attr+'">'+attr+'</span></td>'+
       '<td class="chk"><input type="checkbox" class="pericia-input" data-path="pericias.'+slug+'.treinado" data-skill="'+slug+'" data-attr="'+attr+'"></td>'+
       '<td><input type="number" value="0" class="tabular pericia-input" data-path="pericias.'+slug+'.outros" data-skill="'+slug+'" data-attr="'+attr+'" style="width:52px"></td>'+
       '<td class="row-total tabular rollable" id="total-'+slug+'" title="Clique para rolar">+0</td>';
@@ -881,6 +881,41 @@
     label.innerHTML = '<input type="checkbox" data-path="condicoes.'+slug+'" class="condition-checkbox" data-name="'+name+'"><span>'+name+'</span>';
     conditionGrid.appendChild(label);
   });
+
+  var CONDITION_EFFECTS = {
+    abalado:{cc:-2,dist:-2,fort:-2,ref:-2,von:-2,pericias:-2},
+    amedrontado:{cc:-2,dist:-2,fort:-2,ref:-2,von:-2,pericias:-2},
+    enjoado:{cc:-2,dist:-2,fort:-2,ref:-2,von:-2,pericias:-2},
+    agarrado:{ca:-2,dist:-2},
+    atordoado:{ca:-2,perdeDesCA:true},
+    caido:{cc:-4},
+    cego:{ca:-2,perdeDesCA:true,cc:-4,dist:-4,pericias:-4},
+    confuso:{},
+    enfeiticado:{},
+    envenenado:{fort:-2},
+    exausto:{cc:-3,dist:-3,ca:-3},
+    fatigado:{cc:-2,dist:-2},
+    imovel:{cc:-2,dist:-2,ca:-2},
+    inconsciente:{ca:-5,perdeDesCA:true,ref:-10},
+    invisivel:{ca:4},
+    lento:{cc:-2,dist:-2,ca:-2},
+    paralisado:{ca:-5,perdeDesCA:true,ref:-10},
+    surdo:{pericias:-4}
+  };
+  function getActiveConditionEffects(){
+    var sum = {ca:0,cc:0,dist:0,fort:0,ref:0,von:0,pericias:0,perdeDesCA:false};
+    document.querySelectorAll('.condition-checkbox').forEach(function(cb){
+      if(!cb.checked) return;
+      var slug = cb.getAttribute('data-path').split('.')[1];
+      var eff = CONDITION_EFFECTS[slug];
+      if(!eff) return;
+      Object.keys(eff).forEach(function(k){
+        if(k === 'perdeDesCA'){ if(eff[k]) sum.perdeDesCA = true; }
+        else sum[k] += eff[k];
+      });
+    });
+    return sum;
+  }
 
   function renderActiveConditions(){
     var active = Array.prototype.filter.call(document.querySelectorAll('.condition-checkbox'), function(cb){ return cb.checked; });
@@ -1085,29 +1120,37 @@
       document.getElementById('mod-'+a.key).textContent = fmt(m);
     });
 
+    document.querySelectorAll('.attr-pill').forEach(function(el){
+      var a = el.getAttribute('data-attr-display');
+      if(a && attrMods[a] !== undefined) el.textContent = a + ' ' + fmt(attrMods[a]);
+    });
+
+    var condFx = getActiveConditionEffects();
+    var desParaCA = condFx.perdeDesCA ? 0 : attrMods.DES;
+
     var bonusArmadura = Number(document.querySelector('[data-path="ca.bonusArmadura"]').value)||0;
     var bonusEscudo = Number(document.querySelector('[data-path="ca.bonusEscudo"]').value)||0;
     var outrosA = Number(document.querySelector('[data-path="ca.outrosA"]').value)||0;
     var outrosB = Number(document.querySelector('[data-path="ca.outrosB"]').value)||0;
     var modTamanho = Number(document.getElementById('modTamanho').value)||0;
     document.getElementById('caMetadeNivel').textContent = metadeNivel;
-    document.getElementById('caDesMod').textContent = fmt(attrMods.DES);
-    document.getElementById('caTotal').textContent = 10 + metadeNivel + attrMods.DES + bonusArmadura + bonusEscudo + modTamanho + outrosA + outrosB;
+    document.getElementById('caDesMod').textContent = fmt(desParaCA);
+    document.getElementById('caTotal').textContent = 10 + metadeNivel + desParaCA + bonusArmadura + bonusEscudo + modTamanho + outrosA + outrosB + condFx.ca;
 
     document.getElementById('fortMetade').textContent = metadeNivel;
     document.getElementById('fortConMod').textContent = fmt(attrMods.CON);
     var fortOutros = Number(document.querySelector('[data-path="resist.fortOutros"]').value)||0;
-    document.getElementById('fortTotal').textContent = fmt(metadeNivel + attrMods.CON + fortOutros);
+    document.getElementById('fortTotal').textContent = fmt(metadeNivel + attrMods.CON + fortOutros + condFx.fort);
 
     document.getElementById('refMetade').textContent = metadeNivel;
     document.getElementById('refDesMod').textContent = fmt(attrMods.DES);
     var refOutros = Number(document.querySelector('[data-path="resist.refOutros"]').value)||0;
-    document.getElementById('refTotal').textContent = fmt(metadeNivel + attrMods.DES + refOutros);
+    document.getElementById('refTotal').textContent = fmt(metadeNivel + attrMods.DES + refOutros + condFx.ref);
 
     document.getElementById('vonMetade').textContent = metadeNivel;
     document.getElementById('vonSabMod').textContent = fmt(attrMods.SAB);
     var vonOutros = Number(document.querySelector('[data-path="resist.vonOutros"]').value)||0;
-    document.getElementById('vonTotal').textContent = fmt(metadeNivel + attrMods.SAB + vonOutros);
+    document.getElementById('vonTotal').textContent = fmt(metadeNivel + attrMods.SAB + vonOutros + condFx.von);
 
     var bba = Number(document.getElementById('bba').value)||0;
     var ccOutros = Number(document.querySelector('[data-path="combat.ccOutros"]').value)||0;
@@ -1115,11 +1158,11 @@
     document.getElementById('ccBba').textContent = bba;
     document.getElementById('ccForMod').textContent = fmt(attrMods.FOR);
     document.getElementById('ccTamanho').textContent = modTamanho;
-    document.getElementById('ccTotal').textContent = fmt(bba + attrMods.FOR + modTamanho + ccOutros);
+    document.getElementById('ccTotal').textContent = fmt(bba + attrMods.FOR + modTamanho + ccOutros + condFx.cc);
     document.getElementById('distBba').textContent = bba;
     document.getElementById('distDesMod').textContent = fmt(attrMods.DES);
     document.getElementById('distTamanho').textContent = modTamanho;
-    document.getElementById('distTotal').textContent = fmt(bba + attrMods.DES + modTamanho + distOutros);
+    document.getElementById('distTotal').textContent = fmt(bba + attrMods.DES + modTamanho + distOutros + condFx.dist);
 
     var pvA = Number(document.getElementById('pvAtual').value)||0;
     var pvM = Number(document.getElementById('pvMax').value)||0;
@@ -1132,7 +1175,7 @@
       var skill = el.getAttribute('data-skill'); var attr = el.getAttribute('data-attr');
       var treinado = document.querySelector('[data-path="pericias.'+skill+'.treinado"]').checked;
       var outros = Number(document.querySelector('[data-path="pericias.'+skill+'.outros"]').value)||0;
-      var total = (treinado ? metadeNivel : 0) + attrMods[attr] + outros;
+      var total = (treinado ? metadeNivel : 0) + attrMods[attr] + outros + condFx.pericias;
       var cell = document.getElementById('total-'+skill);
       if(cell) cell.textContent = fmt(total);
     });
@@ -1141,7 +1184,7 @@
       var attrSel = tr.querySelector('[data-field="attr"]');
       var treinado = tr.querySelector('[data-field="treinado"]').checked;
       var outros = Number(tr.querySelector('[data-field="outros"]').value)||0;
-      var total = (treinado ? metadeNivel : 0) + attrMods[attrSel.value] + outros;
+      var total = (treinado ? metadeNivel : 0) + attrMods[attrSel.value] + outros + condFx.pericias;
       tr.querySelector('[data-computed="total"]').textContent = fmt(total);
     });
 
