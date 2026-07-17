@@ -21,6 +21,23 @@
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'%3E%3Cg fill='none' stroke='%23e5424f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' opacity='0.38'%3E%3Cpath d='M240,200 L225,140 L245,90 L220,20'/%3E%3Cpath d='M240,200 L280,160 L300,100 L340,40'/%3E%3Cpath d='M280,240 L340,220 L400,250 L470,230'/%3E%3Cpath d='M280,280 L320,330 L360,310 L400,370'/%3E%3Cpath d='M240,280 L255,340 L235,390 L250,460'/%3E%3Cpath d='M200,280 L160,320 L180,370 L140,430'/%3E%3Cpath d='M200,240 L140,260 L80,235 L10,255'/%3E%3Cpath d='M200,200 L160,150 L180,100 L130,50'/%3E%3Cpath d='M225,140 L195,120'/%3E%3Cpath d='M340,220 L360,180'/%3E%3Cpath d='M255,340 L290,355'/%3E%3Cpath d='M140,260 L120,290'/%3E%3C/g%3E%3Cpath d='M180,240 Q240,205 300,240 Q240,275 180,240 Z' fill='%232b0a0d' stroke='%23e5424f' stroke-width='2' opacity='0.65'/%3E%3Ccircle cx='240' cy='240' r='26' fill='%23170608' opacity='0.9'/%3E%3Cpath d='M240,240 A18,18 0 1 1 258,222 A12,12 0 1 1 240,210 A6,6 0 1 1 249,216' fill='none' stroke='%23e5424f' stroke-width='2.4' stroke-linecap='round' opacity='0.8'/%3E%3C/svg%3E"),
       radial-gradient(ellipse 120% 90% at 50% 40%, transparent 40%, rgba(0,0,0,0.35) 100%);
   }
+  :root[data-theme="light"]{
+    --bg:#ece5dc;
+    --bg-raised:#f7f2ea;
+    --bg-sunken:#ddd0c0;
+    --ink:#201615;
+    --ink-soft:#4a3d38;
+    --ink-faint:#6b5c54;
+    --accent:#a4222e;
+    --accent-glow:#a4222e40;
+    --accent-ink:#fdf6f2;
+    --accent-2:#7a5c3e;
+    --line:#c9ada0;
+    --shadow: 0 1px 0 rgba(60,40,30,.08);
+    --atmo-bg:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'%3E%3Cg fill='none' stroke='%23a4222e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' opacity='0.22'%3E%3Cpath d='M240,200 L225,140 L245,90 L220,20'/%3E%3Cpath d='M240,200 L280,160 L300,100 L340,40'/%3E%3Cpath d='M280,240 L340,220 L400,250 L470,230'/%3E%3Cpath d='M280,280 L320,330 L360,310 L400,370'/%3E%3Cpath d='M240,280 L255,340 L235,390 L250,460'/%3E%3Cpath d='M200,280 L160,320 L180,370 L140,430'/%3E%3Cpath d='M200,240 L140,260 L80,235 L10,255'/%3E%3Cpath d='M200,200 L160,150 L180,100 L130,50'/%3E%3Cpath d='M225,140 L195,120'/%3E%3Cpath d='M340,220 L360,180'/%3E%3Cpath d='M255,340 L290,355'/%3E%3Cpath d='M140,260 L120,290'/%3E%3C/g%3E%3Cpath d='M180,240 Q240,205 300,240 Q240,275 180,240 Z' fill='%23d9c4b0' stroke='%23a4222e' stroke-width='2' opacity='0.55'/%3E%3Ccircle cx='240' cy='240' r='26' fill='%233a2420' opacity='0.75'/%3E%3Cpath d='M240,240 A18,18 0 1 1 258,222 A12,12 0 1 1 240,210 A6,6 0 1 1 249,216' fill='none' stroke='%23a4222e' stroke-width='2.4' stroke-linecap='round' opacity='0.65'/%3E%3C/svg%3E"),
+      radial-gradient(ellipse 120% 90% at 50% 40%, transparent 40%, rgba(120,90,70,0.10) 100%);
+  }
 
   *{box-sizing:border-box;}
   html,body{margin:0;}
@@ -295,6 +312,10 @@
   .auth-guest-btn{ width:100%; border-top:1px solid var(--line); padding-top:14px; margin-top:4px; }
   .account-badge{ display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--ink-faint); }
 </style>
+
+<script>
+  try{ document.documentElement.setAttribute('data-theme', localStorage.getItem('dark-lord-rpg-theme') || 'dark'); }catch(e){}
+</script>
 
 <div id="auth-overlay" class="auth-overlay">
   <div class="auth-card">
@@ -663,6 +684,7 @@
       <button type="button" id="auth-logout" class="small ghost">Sair</button>
     </span>
     <button type="button" id="btn-show-login" class="small ghost">Entrar / Criar conta</button>
+    <button type="button" id="btn-theme-toggle" class="small ghost">☀️ Modo Claro</button>
     <button id="btn-share">Link com dados</button>
     <button id="btn-export">Exportar</button>
     <button id="btn-import">Importar</button>
@@ -1250,6 +1272,24 @@
   var showLoginBtn = document.getElementById('btn-show-login');
   if(showLoginBtn){
     showLoginBtn.addEventListener('click', function(){ if(authOverlay) authOverlay.hidden = false; });
+  }
+
+  var THEME_KEY = 'dark-lord-rpg-theme';
+  var themeBtn = document.getElementById('btn-theme-toggle');
+  function syncThemeBtnLabel(){
+    if(!themeBtn) return;
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    themeBtn.textContent = isLight ? '🌙 Modo Escuro' : '☀️ Modo Claro';
+  }
+  syncThemeBtnLabel();
+  if(themeBtn){
+    themeBtn.addEventListener('click', function(){
+      var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      var next = isLight ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+      syncThemeBtnLabel();
+    });
   }
 })();
 </script>
