@@ -77,8 +77,10 @@
   .tab[aria-selected="true"]{ color:var(--accent); border-bottom-color:var(--accent); }
   .tab:hover{ color:var(--ink); }
 
-  .panel{ display:none; padding-top:20px; }
-  .panel.active{ display:block; }
+  .panel{ padding:30px 0 10px; border-top:1px solid var(--line); scroll-margin-top:58px; }
+  .panel:first-of-type{ border-top:none; padding-top:6px; }
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } }
 
   .section-title{ font-family:var(--font-display); font-size:19px; font-weight:700; margin:26px 0 12px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
   .section-title:first-child{ margin-top:4px; }
@@ -172,7 +174,11 @@
 
   @media (prefers-reduced-motion: reduce){ .bar-fill{ transition:none; } }
 
-  .active-conditions{ display:none; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .active-conditions{
+    display:none; flex-wrap:wrap; gap:6px; padding:8px 16px;
+    position:sticky; top:40px; z-index:4; background:var(--bg);
+    border-bottom:1px solid var(--line);
+  }
   .condition-tag{
     font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; font-weight:700;
     color:var(--accent-ink); background:var(--accent); border-radius:4px; padding:3px 7px;
@@ -264,22 +270,22 @@
         <div class="field"><span class="label">Tamanho</span><input data-path="id.tamanho" placeholder="Médio" autocomplete="off"></div>
         <div class="field"><span class="label">Deslocamento</span><input data-path="id.deslocamento" placeholder="9m" autocomplete="off"></div>
       </div>
-      <div class="active-conditions" id="active-conditions"></div>
     </div>
   </div>
 
   <div class="tabs" role="tablist">
     <div class="tab" data-tab="atributos" role="tab" aria-selected="true">Atributos</div>
-    <div class="tab" data-tab="combate" role="tab" aria-selected="false">Combate</div>
     <div class="tab" data-tab="pericias" role="tab" aria-selected="false">Perícias</div>
+    <div class="tab" data-tab="combate" role="tab" aria-selected="false">Combate</div>
     <div class="tab" data-tab="habilidades" role="tab" aria-selected="false">Habilidades &amp; Talentos</div>
     <div class="tab" data-tab="magias" role="tab" aria-selected="false">Magias</div>
     <div class="tab" data-tab="equipamento" role="tab" aria-selected="false">Equipamento &amp; Dinheiro</div>
     <div class="tab" data-tab="notas" role="tab" aria-selected="false">Notas</div>
   </div>
+  <div class="active-conditions" id="active-conditions"></div>
 
   <!-- ATRIBUTOS -->
-  <section class="panel active" id="panel-atributos">
+  <section class="panel" id="panel-atributos">
     <div class="section-title">Habilidades</div>
     <div class="attr-grid" id="attr-grid"></div>
 
@@ -307,6 +313,20 @@
         <input data-path="combat.reducaoDano" type="number" value="0" class="tabular">
       </div>
     </div>
+  </section>
+
+  <!-- PERICIAS -->
+  <section class="panel" id="panel-pericias">
+    <div class="section-title">Perícias <span class="hint">Total = graduação + habilidade + outros</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Perícia</th><th>Habilid.</th><th>Grad.</th><th>Outros</th><th>Total</th></tr></thead>
+        <tbody id="pericias-body"></tbody>
+        <tbody id="pericias-custom-body"></tbody>
+      </table>
+    </div>
+    <button class="add-row-btn small" id="add-pericia">+ Adicionar perícia</button>
+    <div class="pericias-legend">‡ penalidade de armadura aplicável &middot; * somente treinado (graduação &gt; 0)</div>
   </section>
 
   <!-- COMBATE -->
@@ -445,20 +465,6 @@
       </table>
     </div>
     <button class="add-row-btn small" id="add-armadura">+ Adicionar armadura/escudo</button>
-  </section>
-
-  <!-- PERICIAS -->
-  <section class="panel" id="panel-pericias">
-    <div class="section-title">Perícias <span class="hint">Total = graduação + habilidade + outros</span></div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Perícia</th><th>Habilid.</th><th>Grad.</th><th>Outros</th><th>Total</th></tr></thead>
-        <tbody id="pericias-body"></tbody>
-        <tbody id="pericias-custom-body"></tbody>
-      </table>
-    </div>
-    <button class="add-row-btn small" id="add-pericia">+ Adicionar perícia</button>
-    <div class="pericias-legend">‡ penalidade de armadura aplicável &middot; * somente treinado (graduação &gt; 0)</div>
   </section>
 
   <!-- HABILIDADES & TALENTOS -->
@@ -1064,12 +1070,24 @@
 
   document.querySelectorAll('.tab').forEach(function(tab){
     tab.addEventListener('click', function(){
-      document.querySelectorAll('.tab').forEach(function(t){ t.setAttribute('aria-selected','false'); });
-      document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
-      tab.setAttribute('aria-selected','true');
-      document.getElementById('panel-'+tab.getAttribute('data-tab')).classList.add('active');
+      var target = document.getElementById('panel-'+tab.getAttribute('data-tab'));
+      if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
     });
   });
+
+  if('IntersectionObserver' in window){
+    var tabByPanel = {};
+    document.querySelectorAll('.tab').forEach(function(t){ tabByPanel['panel-'+t.getAttribute('data-tab')] = t; });
+    var spy = new IntersectionObserver(function(entries){
+      var visible = entries.filter(function(e){ return e.isIntersecting; })
+        .sort(function(a,b){ return b.intersectionRatio - a.intersectionRatio; })[0];
+      if(!visible) return;
+      document.querySelectorAll('.tab').forEach(function(t){ t.setAttribute('aria-selected','false'); });
+      var tab = tabByPanel[visible.target.id];
+      if(tab) tab.setAttribute('aria-selected','true');
+    }, {rootMargin:'-72px 0px -60% 0px', threshold:[0,0.25,0.5,0.75,1]});
+    document.querySelectorAll('.panel').forEach(function(p){ spy.observe(p); });
+  }
 
   document.getElementById('btn-export').addEventListener('click', function(){
     var data = serialize();
