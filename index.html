@@ -393,6 +393,7 @@
     <div class="tab" data-tab="combate" role="tab" aria-selected="false">Combate</div>
     <div class="tab" data-tab="habilidades" role="tab" aria-selected="false">Habilidades &amp; Talentos</div>
     <div class="tab" data-tab="magias" role="tab" aria-selected="false">Magias</div>
+    <div class="tab" data-tab="compendio" role="tab" aria-selected="false">Compêndio</div>
     <div class="tab" data-tab="equipamento" role="tab" aria-selected="false">Equipamento &amp; Dinheiro</div>
     <div class="tab" data-tab="notas" role="tab" aria-selected="false">Notas</div>
   </div>
@@ -652,6 +653,36 @@
     <div class="spell-grid" id="spell-grid"></div>
   </section>
 
+  <!-- COMPENDIO -->
+  <section class="panel" id="panel-compendio">
+    <div class="section-title">Compêndio de Magias <span class="hint">privado da sua conta — nome + link de consulta, sem copiar texto de livro nenhum</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Magia</th><th>Círc.</th><th>Tipo</th><th>PM</th><th>Link</th><th></th></tr></thead>
+        <tbody id="compendio-magias-body"></tbody>
+      </table>
+    </div>
+    <button class="add-row-btn small" id="add-compendio-magia">+ Adicionar magia ao compêndio</button>
+
+    <div class="section-title">Compêndio de Poderes de Classe</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Poder</th><th>Classe/Origem</th><th>Link</th><th></th></tr></thead>
+        <tbody id="compendio-poderes-body"></tbody>
+      </table>
+    </div>
+    <button class="add-row-btn small" id="add-compendio-poder">+ Adicionar poder ao compêndio</button>
+
+    <details class="help">
+      <summary>Como funciona esse compêndio</summary>
+      <div class="help-body">
+        Fica salvo só na sua conta (neste navegador, e na nuvem se você estiver logado) — ninguém mais vê.<br>
+        Cadastre o nome e um link de onde consultar a descrição completa (compêndio oficial, site que você usa, etc.).<br>
+        O botão 🔗 abre o link; o botão "Usar" joga o nome direto pra ficha do personagem atual (no círculo certo, pra magias, ou nas Habilidades de Classe, pra poderes).
+      </div>
+    </details>
+  </section>
+
   <!-- EQUIPAMENTO & DINHEIRO -->
   <section class="panel" id="panel-equipamento">
     <div class="section-title">Equipamento</div>
@@ -888,6 +919,115 @@
   document.getElementById('add-armadura').addEventListener('click', function(){ makeRow(armadurasBody, armaduraFields); scheduleSave(); });
   document.getElementById('add-item').addEventListener('click', function(){ makeRow(itensBody, itemFields); scheduleSave(); });
   document.getElementById('add-pericia').addEventListener('click', function(){ makeRow(periciasCustomBody, customPericiaFields, null, {className:'custom-pericia-row'}); scheduleSave(); });
+
+  var COMPENDIO_KEY = 'dark-lord-rpg-compendio-v1';
+  var compendioMagiasBody = document.getElementById('compendio-magias-body');
+  var compendioPoderesBody = document.getElementById('compendio-poderes-body');
+  var compendioMagiaFields = [
+    {key:'nome', nameCell:true, width:150},
+    {key:'circulo', type:'number', width:50},
+    {key:'tipo', type:'select', options:['Arcana','Divina'], narrow:true},
+    {key:'pm', type:'number', width:50},
+    {key:'link', width:170}
+  ];
+  var compendioPoderFields = [
+    {key:'nome', nameCell:true, width:170},
+    {key:'origem', width:130},
+    {key:'link', width:170}
+  ];
+
+  function openLinkFrom(input){
+    var url = (input.value||'').trim();
+    if(!url) return;
+    if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    window.open(url, '_blank', 'noopener');
+  }
+  function enhanceCompendioMagiaRow(tr){
+    var nomeInput = tr.querySelector('[data-field="nome"]');
+    var circuloInput = tr.querySelector('[data-field="circulo"]');
+    var linkInput = tr.querySelector('[data-field="link"]');
+    if(!linkInput) return;
+    var td = linkInput.parentElement;
+    td.style.display = 'flex'; td.style.gap = '4px'; td.style.alignItems = 'center';
+    var openBtn = document.createElement('button');
+    openBtn.type = 'button'; openBtn.className = 'small dice-inline-btn'; openBtn.title = 'Abrir link';
+    openBtn.textContent = '🔗';
+    openBtn.addEventListener('click', function(){ openLinkFrom(linkInput); });
+    td.appendChild(openBtn);
+    var useBtn = document.createElement('button');
+    useBtn.type = 'button'; useBtn.className = 'small'; useBtn.textContent = 'Usar';
+    useBtn.title = 'Adicionar à ficha atual';
+    useBtn.addEventListener('click', function(){
+      var circ = parseInt(circuloInput.value, 10);
+      if(isNaN(circ) || circ < 0 || circ > 9) circ = 0;
+      var target = document.querySelector('[data-path="magias.circulo'+circ+'"]');
+      if(target){
+        target.value = (target.value ? target.value + '\n' : '') + (nomeInput.value || 'Magia sem nome');
+        scheduleSave();
+      }
+    });
+    td.appendChild(useBtn);
+  }
+  function enhanceCompendioPoderRow(tr){
+    var nomeInput = tr.querySelector('[data-field="nome"]');
+    var linkInput = tr.querySelector('[data-field="link"]');
+    if(!linkInput) return;
+    var td = linkInput.parentElement;
+    td.style.display = 'flex'; td.style.gap = '4px'; td.style.alignItems = 'center';
+    var openBtn = document.createElement('button');
+    openBtn.type = 'button'; openBtn.className = 'small dice-inline-btn'; openBtn.title = 'Abrir link';
+    openBtn.textContent = '🔗';
+    openBtn.addEventListener('click', function(){ openLinkFrom(linkInput); });
+    td.appendChild(openBtn);
+    var useBtn = document.createElement('button');
+    useBtn.type = 'button'; useBtn.className = 'small'; useBtn.textContent = 'Usar';
+    useBtn.title = 'Adicionar às Habilidades de Classe';
+    useBtn.addEventListener('click', function(){
+      var target = document.querySelector('[data-path="habilidades.classe"]');
+      if(target){
+        target.value = (target.value ? target.value + '\n' : '') + (nomeInput.value || 'Poder sem nome');
+        scheduleSave();
+      }
+    });
+    td.appendChild(useBtn);
+  }
+
+  document.getElementById('add-compendio-magia').addEventListener('click', function(){
+    makeRow(compendioMagiasBody, compendioMagiaFields, null, {afterCreate:enhanceCompendioMagiaRow});
+    scheduleCompendioSave();
+  });
+  document.getElementById('add-compendio-poder').addEventListener('click', function(){
+    makeRow(compendioPoderesBody, compendioPoderFields, null, {afterCreate:enhanceCompendioPoderRow});
+    scheduleCompendioSave();
+  });
+
+  function serializeCompendio(){
+    return {
+      magias: collectRows(compendioMagiasBody, compendioMagiaFields),
+      poderes: collectRows(compendioPoderesBody, compendioPoderFields)
+    };
+  }
+  function applyCompendio(obj){
+    obj = obj || {};
+    fillRows(compendioMagiasBody, compendioMagiaFields, obj.magias, {afterCreate:enhanceCompendioMagiaRow});
+    fillRows(compendioPoderesBody, compendioPoderFields, obj.poderes, {afterCreate:enhanceCompendioPoderRow});
+  }
+  function persistCompendio(){ try{ localStorage.setItem(COMPENDIO_KEY, JSON.stringify(serializeCompendio())); }catch(e){} }
+  function loadCompendioStored(){ try{ var raw = localStorage.getItem(COMPENDIO_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
+
+  var compendioSaveTimer = null;
+  function scheduleCompendioSave(){
+    clearTimeout(compendioSaveTimer);
+    compendioSaveTimer = setTimeout(function(){
+      persistCompendio();
+      if(window.__compendioCloudSave) window.__compendioCloudSave();
+    }, 400);
+  }
+  document.addEventListener('input', function(e){ if(e.target.closest('#panel-compendio')) scheduleCompendioSave(); });
+  document.addEventListener('change', function(e){ if(e.target.closest('#panel-compendio')) scheduleCompendioSave(); });
+
+  window.__compendio = { serialize: serializeCompendio, apply: applyCompendio };
+  applyCompendio(loadCompendioStored());
 
   var CIRCLES = ['0','1º','2º','3º','4º','5º','6º','7º','8º','9º'];
   var spellGrid = document.getElementById('spell-grid');
@@ -1528,6 +1668,15 @@
       document.addEventListener('input', function(e){ if(e.target.closest('.app')) scheduleCloudSave(); });
       document.addEventListener('change', function(e){ if(e.target.closest('.app')) scheduleCloudSave(); });
 
+      var compendioCloudTimer = null;
+      window.__compendioCloudSave = function(){
+        if(!auth.currentUser) return;
+        clearTimeout(compendioCloudTimer);
+        compendioCloudTimer = setTimeout(function(){
+          setDoc(doc(db,'compendio',auth.currentUser.uid), window.__compendio.serialize()).catch(function(){});
+        }, 800);
+      };
+
       onAuthStateChanged(auth, function(user){
         if(user){
           overlay.hidden = true;
@@ -1538,6 +1687,9 @@
               window.__ficha.apply(snap.data());
               window.__ficha.flashSaveText('Ficha carregada da nuvem!');
             }
+          }).catch(function(){});
+          getDoc(doc(db,'compendio',user.uid)).then(function(snap){
+            if(snap.exists()) window.__compendio.apply(snap.data());
           }).catch(function(){});
         } else {
           document.getElementById('account-badge').hidden = true;
