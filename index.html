@@ -81,6 +81,14 @@
   .field{ display:flex; flex-direction:column; }
   .row-flex{ display:flex; gap:10px; flex-wrap:wrap; }
   .tabular{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  .import-card-row{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  button.import-card{
+    display:flex; align-items:center; gap:10px; padding:10px 16px;
+    background:var(--bg-sunken); border:1px solid var(--accent); border-radius:var(--radius);
+    font-size:13px; font-weight:600; text-align:left;
+  }
+  button.import-card:hover{ background:var(--accent); color:var(--accent-ink); }
+  button.import-card .import-card-icon{ font-size:22px; line-height:1; }
 
   .app{ max-width:1000px; margin:0 auto; padding:0 16px 90px; }
 
@@ -661,6 +669,11 @@
   <!-- COMPENDIO -->
   <section class="panel" id="panel-compendio">
     <div class="section-title">Compêndio de Magias <span class="hint">privado da sua conta — dados e cálculos, sem copiar texto de livro nenhum publicamente</span></div>
+    <div class="import-card-row">
+      <button class="import-card" id="import-wiki-magias"><span class="import-card-icon">🌐</span>Importar todas da Tormenta Fandom Wiki</button>
+      <button class="import-card" id="import-json-magias"><span class="import-card-icon">🪄</span>Importar JSON de Magias</button>
+      <input type="file" id="compendio-magias-json-file" accept="application/json" style="display:none">
+    </div>
     <div class="row-flex" style="margin-bottom:10px; align-items:center;">
       <input type="text" id="compendio-magias-search" placeholder="Buscar por nome..." style="max-width:220px;">
       <select id="compendio-magias-filter-tipo" style="max-width:140px;">
@@ -670,9 +683,6 @@
         <option value="Universal">Só Universal</option>
       </select>
       <input type="number" id="compendio-magias-filter-circulo" placeholder="Círculo" min="0" max="9" style="max-width:100px;">
-      <button class="small" id="import-wiki-magias">Importar todas da Tormenta Fandom Wiki</button>
-      <button class="small" id="import-json-magias">Importar JSON (arquivo local)</button>
-      <input type="file" id="compendio-magias-json-file" accept="application/json" style="display:none">
       <button class="small remove-btn" id="clean-magias-sem-dados">Remover magias sem dados do JSON</button>
       <span class="hint" id="import-wiki-status"></span>
     </div>
@@ -686,10 +696,12 @@
     <button class="add-row-btn small" id="add-compendio-magia">+ Adicionar magia ao compêndio</button>
 
     <div class="section-title">Compêndio de Poderes de Classe</div>
+    <div class="import-card-row">
+      <button class="import-card" id="import-json-poderes"><span class="import-card-icon">🌟</span>Importar JSON de Poderes</button>
+      <input type="file" id="compendio-poderes-json-file" accept="application/json" style="display:none">
+    </div>
     <div class="row-flex" style="margin-bottom:10px;">
       <input type="text" id="compendio-poderes-search" placeholder="Buscar por nome..." style="max-width:260px;">
-      <button class="small" id="import-json-poderes">Importar JSON (arquivo local)</button>
-      <input type="file" id="compendio-poderes-json-file" accept="application/json" style="display:none">
       <span class="hint" id="import-poderes-status"></span>
     </div>
     <div class="table-wrap">
@@ -701,20 +713,20 @@
     <button class="add-row-btn small" id="add-compendio-poder">+ Adicionar poder ao compêndio</button>
 
     <div class="section-title">Referência de Perícias e Condições <span class="hint">só descrições — aparecem no ℹ️ das abas Perícias e Atributos</span></div>
-    <div class="row-flex" style="margin-bottom:10px;">
-      <button class="small" id="import-json-pericias">Importar JSON de Perícias</button>
+    <div class="import-card-row">
+      <button class="import-card" id="import-json-pericias"><span class="import-card-icon">📚</span>Importar JSON de Perícias</button>
       <input type="file" id="compendio-pericias-json-file" accept="application/json" style="display:none">
-      <button class="small" id="import-json-condicoes">Importar JSON de Condições</button>
+      <button class="import-card" id="import-json-condicoes"><span class="import-card-icon">⚠️</span>Importar JSON de Condições</button>
       <input type="file" id="compendio-condicoes-json-file" accept="application/json" style="display:none">
-      <span class="hint" id="import-ref-status"></span>
     </div>
+    <div class="row-flex" style="margin-bottom:10px;"><span class="hint" id="import-ref-status"></span></div>
 
     <div class="section-title">Compêndio de Equipamento <span class="hint">busque e clique em "Usar" pra jogar na ficha (Armas/Armaduras no Combate, Itens no Equipamento)</span></div>
-    <div class="row-flex" style="margin-bottom:10px;">
-      <button class="small" id="import-json-equipamento">Importar JSON de Equipamento</button>
+    <div class="import-card-row">
+      <button class="import-card" id="import-json-equipamento"><span class="import-card-icon">🎒</span>Importar JSON de Equipamento</button>
       <input type="file" id="compendio-equipamento-json-file" accept="application/json" style="display:none">
-      <span class="hint" id="import-equipamento-status"></span>
     </div>
+    <div class="row-flex" style="margin-bottom:10px;"><span class="hint" id="import-equipamento-status"></span></div>
 
     <div class="section-title" style="font-size:15px;">Armas</div>
     <input type="text" id="compendio-armas-search" placeholder="Buscar arma por nome..." style="max-width:260px;margin-bottom:8px;">
