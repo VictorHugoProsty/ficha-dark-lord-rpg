@@ -676,7 +676,8 @@
       <button class="small remove-btn" id="clean-magias-sem-dados">Remover magias sem dados do JSON</button>
       <span class="hint" id="import-wiki-status"></span>
     </div>
-    <div class="table-wrap">
+    <div class="hint" id="compendio-magias-empty-hint" style="padding:14px 0;">Digite um nome ou escolha um filtro acima pra buscar magias no compêndio.</div>
+    <div class="table-wrap" id="compendio-magias-wrap" style="display:none;">
       <table>
         <thead><tr><th>Magia</th><th>Círc.</th><th>Tipo</th><th>PM</th><th>Dados / Ações</th><th></th></tr></thead>
         <tbody id="compendio-magias-body"></tbody>
@@ -700,8 +701,8 @@
       <summary>Como funciona esse compêndio</summary>
       <div class="help-body">
         Fica salvo só na sua conta (neste navegador, e na nuvem se você estiver logado) — ninguém mais vê.<br>
-        Cadastre o nome e um link de onde consultar a descrição completa (compêndio oficial, site que você usa, etc.).<br>
-        O botão 🔗 abre o link; o botão "Usar" joga o nome direto pra ficha do personagem atual (no círculo certo, pra magias, ou nas Habilidades de Classe, pra poderes).
+        Magias: use a busca por nome, o filtro de tipo ou o círculo máximo pra encontrar a magia no compêndio (a lista completa só aparece quando algum filtro está ativo). O botão "Usar" joga a magia direto pro campo do círculo certo na ficha.<br>
+        Poderes: cadastre o nome e um link de onde consultar a descrição completa. O botão 🔗 abre o link; o botão "Usar" joga o nome direto pras Habilidades de Classe.
       </div>
     </details>
   </section>
@@ -1007,7 +1008,10 @@
     useBtn.title = 'Adicionar à ficha atual';
     useBtn.addEventListener('click', function(){
       var circ = parseInt(circuloInput.value, 10);
-      if(isNaN(circ) || circ < 0 || circ > 9) circ = 0;
+      if(isNaN(circ) || circ < 0 || circ > 9){
+        alert('Essa magia ainda não tem círculo cadastrado — preencha o círculo antes de usar, senão não sei em qual campo colocar ela.');
+        return;
+      }
       var pieces = [nomeInput.value || 'Magia sem nome'];
       var extra = [];
       if(pmInput && pmInput.value) extra.push('PM '+pmInput.value);
@@ -1047,6 +1051,7 @@
 
   document.getElementById('add-compendio-magia').addEventListener('click', function(){
     makeRow(compendioMagiasBody, compendioMagiaFields, null, {afterCreate:enhanceCompendioMagiaRow});
+    applyMagiasFilter(true);
     scheduleCompendioSave();
   });
   document.getElementById('add-compendio-poder').addEventListener('click', function(){
@@ -1064,6 +1069,7 @@
     obj = obj || {};
     fillRows(compendioMagiasBody, compendioMagiaFields, obj.magias, {afterCreate:enhanceCompendioMagiaRow});
     fillRows(compendioPoderesBody, compendioPoderFields, obj.poderes, {afterCreate:enhanceCompendioPoderRow});
+    applyMagiasFilter();
   }
   function persistCompendio(){ try{ localStorage.setItem(COMPENDIO_KEY, JSON.stringify(serializeCompendio())); }catch(e){} }
   function loadCompendioStored(){ try{ var raw = localStorage.getItem(COMPENDIO_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
@@ -1095,11 +1101,21 @@
   }
   filterCompendioTable(document.getElementById('compendio-poderes-search'), compendioPoderesBody);
 
-  function applyMagiasFilter(){
+  function applyMagiasFilter(forceShow){
     var q = normalizeSearch(document.getElementById('compendio-magias-search').value.trim());
     var tipoFiltro = document.getElementById('compendio-magias-filter-tipo').value;
     var circMaxRaw = document.getElementById('compendio-magias-filter-circulo').value;
     var circMax = circMaxRaw === '' ? null : parseInt(circMaxRaw, 10);
+    var wrap = document.getElementById('compendio-magias-wrap');
+    var hint = document.getElementById('compendio-magias-empty-hint');
+    var hasQuery = !!q || !!tipoFiltro || circMax !== null;
+    if(!hasQuery && !forceShow){
+      wrap.style.display = 'none';
+      hint.style.display = '';
+      return;
+    }
+    wrap.style.display = '';
+    hint.style.display = 'none';
     Array.prototype.forEach.call(compendioMagiasBody.children, function(tr){
       var nomeInput = tr.querySelector('[data-field="nome"]');
       var tipoInput = tr.querySelector('[data-field="tipo"]');
