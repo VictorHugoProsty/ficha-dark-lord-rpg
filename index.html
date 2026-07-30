@@ -387,8 +387,24 @@
       <input type="file" id="avatar-file" accept="image/*" style="display:none">
       <div class="id-grid">
         <div class="field"><span class="label">Jogador</span><input data-path="id.jogador" autocomplete="off"></div>
-        <div class="field"><span class="label">Raça</span><input data-path="id.raca" autocomplete="off"></div>
-        <div class="field"><span class="label">Classe</span><input data-path="id.classe" autocomplete="off"></div>
+        <div class="field"><span class="label">Raça</span>
+          <select data-path="id.raca" id="select-raca">
+            <option value="">Selecione...</option>
+            <option>Humano</option><option>Anão</option><option>Elfo</option><option>Dahllan</option>
+            <option>Goblin</option><option>Golem</option><option>Hynne</option><option>Kliren</option>
+            <option>Lefou</option><option>Minotauro</option><option>Qareen</option><option>Sereia</option>
+            <option>Sílfide</option><option>Suraggel</option>
+          </select>
+        </div>
+        <div class="field"><span class="label">Classe</span>
+          <select data-path="id.classe" id="select-classe">
+            <option value="">Selecione...</option>
+            <option>Arcanista</option><option>Bárbaro</option><option>Bardo</option><option>Bucaneiro</option>
+            <option>Caçador</option><option>Cavaleiro</option><option>Clérigo</option><option>Druida</option>
+            <option>Guerreiro</option><option>Inventor</option><option>Ladino</option><option>Lutador</option>
+            <option>Nobre</option><option>Paladino</option>
+          </select>
+        </div>
         <div class="field"><span class="label">Nível</span><input data-path="id.nivel" type="number" min="1" value="1" class="tabular" id="nivel"></div>
         <div class="field"><span class="label">Tendência</span><input data-path="id.tendencia" autocomplete="off"></div>
         <div class="field"><span class="label">Sexo</span><input data-path="id.sexo" autocomplete="off"></div>
@@ -624,11 +640,11 @@
     <div class="section-title">Habilidades de Raça e Classe</div>
     <div class="freeform-grid">
       <div class="card" style="padding:12px;">
-        <span class="label">Habilidades de Raça</span>
+        <span class="label">Habilidades de Raça <button type="button" class="small" id="reload-habilidades-raca" title="Recarregar da raça selecionada">🔄</button></span>
         <textarea class="freeform-textarea" data-path="habilidades.raca" placeholder="Uma por linha..."></textarea>
       </div>
       <div class="card" style="padding:12px;">
-        <span class="label">Habilidades de Classe</span>
+        <span class="label">Habilidades de Classe <button type="button" class="small" id="reload-habilidades-classe" title="Recarregar da classe selecionada, pelo nível atual">🔄</button></span>
         <textarea class="freeform-textarea" data-path="habilidades.classe" placeholder="Uma por linha..."></textarea>
       </div>
     </div>
@@ -720,6 +736,13 @@
       <input type="file" id="compendio-condicoes-json-file" accept="application/json" style="display:none">
     </div>
     <div class="row-flex" style="margin-bottom:10px;"><span class="hint" id="import-ref-status"></span></div>
+
+    <div class="section-title">Referência de Classes e Raças <span class="hint">ao escolher Classe/Raça na aba Atributos, carrega os poderes aqui</span></div>
+    <div class="import-card-row">
+      <button class="import-card" id="import-json-classes-racas"><span class="import-card-icon">🛡️</span>Importar JSON de Classes e Raças</button>
+      <input type="file" id="compendio-classes-racas-json-file" accept="application/json" style="display:none">
+    </div>
+    <div class="row-flex" style="margin-bottom:10px;"><span class="hint" id="import-classes-racas-status"></span></div>
 
     <div class="section-title">Compêndio de Equipamento <span class="hint">busque e clique em "Usar" pra jogar na ficha (Armas/Armaduras no Combate, Itens no Equipamento)</span></div>
     <div class="import-card-row">
@@ -1301,6 +1324,8 @@
 
   var compendioPericiasRef = {};
   var compendioCondicoesRef = {};
+  var compendioClassesRef = {};
+  var compendioRacasRef = {};
   function serializeCompendio(){
     return {
       magias: collectRows(compendioMagiasBody, compendioMagiaFields),
@@ -1309,7 +1334,9 @@
       armadurasEscudos: collectRows(compendioArmadurasBody, compendioArmaduraFields),
       itensGerais: collectRows(compendioItensBody, compendioItemFields),
       periciasRef: compendioPericiasRef,
-      condicoesRef: compendioCondicoesRef
+      condicoesRef: compendioCondicoesRef,
+      classesRef: compendioClassesRef,
+      racasRef: compendioRacasRef
     };
   }
   function applyCompendio(obj){
@@ -1321,6 +1348,8 @@
     fillRows(compendioItensBody, compendioItemFields, obj.itensGerais, {afterCreate:enhanceCompendioItemRow});
     compendioPericiasRef = obj.periciasRef || {};
     compendioCondicoesRef = obj.condicoesRef || {};
+    compendioClassesRef = obj.classesRef || {};
+    compendioRacasRef = obj.racasRef || {};
     applyMagiasFilter();
     if(typeof applyArmasFilter === 'function') applyArmasFilter();
     if(typeof applyArmadurasFilter === 'function') applyArmadurasFilter();
@@ -1602,6 +1631,48 @@
     scheduleCompendioSave();
     statusEl.textContent = count+' condições/habilidades importadas pra referência.';
   });
+
+  wireJsonImportButton('import-json-classes-racas', 'compendio-classes-racas-json-file', 'import-classes-racas-status', function(data, statusEl){
+    var classes = data.classes || [];
+    var racas = data.racas || [];
+    classes.forEach(function(c){
+      if(!c.nome) return;
+      compendioClassesRef[normalizeSearch(c.nome)] = c.poderes || [];
+    });
+    racas.forEach(function(r){
+      if(!r.nome) return;
+      compendioRacasRef[normalizeSearch(r.nome)] = r.poderes || [];
+    });
+    scheduleCompendioSave();
+    statusEl.textContent = classes.length+' classes e '+racas.length+' raças importadas pra referência.';
+  });
+
+  function powerListText(list, nivelMax){
+    return list
+      .filter(function(p){ return p.nivel == null || nivelMax == null || p.nivel <= nivelMax; })
+      .map(function(p){ return p.nivel != null ? ('Nv.'+p.nivel+' — '+p.nome) : p.nome; })
+      .join('\n');
+  }
+  function loadPowersInto(refMap, selectId, textareaPath, gateByLevel){
+    var select = document.getElementById(selectId);
+    var nome = select ? select.value : '';
+    var textarea = document.querySelector('[data-path="'+textareaPath+'"]');
+    if(!nome || !textarea) return;
+    var list = refMap[normalizeSearch(nome)];
+    if(!list){
+      alert('Sem poderes importados ainda pra "'+nome+'" — importe o JSON de Classes e Raças no Compêndio.');
+      return;
+    }
+    var nivelMax = gateByLevel ? (parseInt((document.querySelector('[data-path="id.nivel"]')||{}).value, 10) || 1) : null;
+    var text = powerListText(list, nivelMax);
+    if(textarea.value.trim() && !confirm('Isso vai substituir o texto atual de "'+textareaPath+'" pelos poderes de '+nome+'. Continuar?')) return;
+    textarea.value = text || 'Nenhum poder cadastrado pra '+nome+' até esse nível.';
+    scheduleSave();
+  }
+  document.getElementById('select-classe').addEventListener('change', function(){ loadPowersInto(compendioClassesRef, 'select-classe', 'habilidades.classe', true); });
+  document.getElementById('select-raca').addEventListener('change', function(){ loadPowersInto(compendioRacasRef, 'select-raca', 'habilidades.raca', false); });
+  document.getElementById('reload-habilidades-classe').addEventListener('click', function(){ loadPowersInto(compendioClassesRef, 'select-classe', 'habilidades.classe', true); });
+  document.getElementById('reload-habilidades-raca').addEventListener('click', function(){ loadPowersInto(compendioRacasRef, 'select-raca', 'habilidades.raca', false); });
 
   function buildEquipDetalhesText(parts){ return parts.filter(Boolean).join('\n'); }
   wireJsonImportButton('import-json-equipamento', 'compendio-equipamento-json-file', 'import-equipamento-status', function(data, statusEl){
