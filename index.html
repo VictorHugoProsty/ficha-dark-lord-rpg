@@ -678,7 +678,7 @@
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Magia</th><th>Círc.</th><th>Tipo</th><th>PM</th><th>Dados</th><th>Link</th><th></th></tr></thead>
+        <thead><tr><th>Magia</th><th>Círc.</th><th>Tipo</th><th>PM</th><th>Dados / Ações</th><th></th></tr></thead>
         <tbody id="compendio-magias-body"></tbody>
       </table>
     </div>
@@ -954,7 +954,6 @@
     {key:'tipo', type:'select', options:['Arcana','Divina','Universal'], narrow:true},
     {key:'pm', type:'number', width:50},
     {key:'dados', width:90},
-    {key:'link', width:150},
     {key:'detalhes', type:'hidden'}
   ];
   var compendioPoderFields = [
@@ -974,44 +973,34 @@
     var circuloInput = tr.querySelector('[data-field="circulo"]');
     var pmInput = tr.querySelector('[data-field="pm"]');
     var dadosInput = tr.querySelector('[data-field="dados"]');
-    var linkInput = tr.querySelector('[data-field="link"]');
     var detalhesInput = tr.querySelector('[data-field="detalhes"]');
-    if(!linkInput) return;
-    var td = linkInput.parentElement;
-    td.style.display = 'flex'; td.style.gap = '4px'; td.style.alignItems = 'center';
+    if(!dadosInput) return;
+    var td = dadosInput.parentElement;
+    td.style.display = 'flex'; td.style.flexWrap = 'wrap'; td.style.gap = '4px'; td.style.alignItems = 'center';
 
-    if(dadosInput){
-      var rollBtn = document.createElement('button');
-      rollBtn.type = 'button'; rollBtn.className = 'small dice-inline-btn'; rollBtn.title = 'Rolar dado da magia';
-      rollBtn.textContent = '🎲';
-      rollBtn.addEventListener('click', function(){
-        var spec = (dadosInput.value.split(',')[0] || '').trim();
-        if(!spec){ presentRoll(nomeInput.value || 'Magia', [], 0, null, 'Sem dado cadastrado pra essa magia.'); return; }
-        rollDamageNotation(spec, nomeInput.value || 'Magia');
-      });
-      td.appendChild(rollBtn);
-    }
-    var openBtn = document.createElement('button');
-    openBtn.type = 'button'; openBtn.className = 'small dice-inline-btn'; openBtn.title = 'Abrir link';
-    openBtn.textContent = '🔗';
-    openBtn.addEventListener('click', function(){ openLinkFrom(linkInput); });
-    td.appendChild(openBtn);
+    var rollBtn = document.createElement('button');
+    rollBtn.type = 'button'; rollBtn.className = 'small dice-inline-btn'; rollBtn.title = 'Rolar dado da magia';
+    rollBtn.textContent = '🎲';
+    rollBtn.addEventListener('click', function(){
+      var spec = (dadosInput.value.split(',')[0] || '').trim();
+      if(!spec){ presentRoll(nomeInput.value || 'Magia', [], 0, null, 'Sem dado cadastrado pra essa magia.'); return; }
+      rollDamageNotation(spec, nomeInput.value || 'Magia');
+    });
+    td.appendChild(rollBtn);
 
-    if(detalhesInput){
-      var infoBtn = document.createElement('button');
-      infoBtn.type = 'button'; infoBtn.className = 'small'; infoBtn.title = 'Ver detalhes';
-      infoBtn.textContent = 'ℹ️';
-      var detailBox = null;
-      infoBtn.addEventListener('click', function(){
-        if(detailBox){ detailBox.remove(); detailBox = null; return; }
-        if(!detalhesInput.value){ return; }
-        detailBox = document.createElement('div');
-        detailBox.className = 'compendio-detail-box';
-        detailBox.textContent = detalhesInput.value;
-        nomeInput.parentElement.appendChild(detailBox);
-      });
-      td.appendChild(infoBtn);
-    }
+    var infoBtn = document.createElement('button');
+    infoBtn.type = 'button'; infoBtn.className = 'small'; infoBtn.title = 'Ver detalhes da magia';
+    infoBtn.textContent = 'ℹ️';
+    var detailBox = null;
+    infoBtn.addEventListener('click', function(){
+      if(detailBox){ detailBox.remove(); detailBox = null; return; }
+      detailBox = document.createElement('div');
+      detailBox.className = 'compendio-detail-box';
+      detailBox.textContent = detalhesInput.value
+        || 'Sem detalhes cadastrados ainda pra essa magia — importe um JSON com os dados dela, ou preencha na mão.';
+      nomeInput.parentElement.appendChild(detailBox);
+    });
+    td.appendChild(infoBtn);
 
     var useBtn = document.createElement('button');
     useBtn.type = 'button'; useBtn.className = 'small'; useBtn.textContent = 'Usar';
@@ -1147,7 +1136,7 @@
         var key = nome.trim().toLowerCase();
         if(existing[key]) return;
         makeRow(compendioMagiasBody, compendioMagiaFields,
-          {nome:nome, circulo:'', tipo:tipo, pm:'', link:wikiPageUrl(nome)},
+          {nome:nome, circulo:'', tipo:tipo, pm:''},
           {afterCreate:enhanceCompendioMagiaRow});
         existing[key] = true;
         added++;
@@ -1227,7 +1216,7 @@
             var dados = (m.dados_citados || []).join(', ');
             var rowData = {
               nome: nome, circulo: m.circulo || '', tipo: m.tipo || 'Arcana',
-              pm: m.custo_pm_base || '', dados: dados, link: wikiPageUrl(nome),
+              pm: m.custo_pm_base || '', dados: dados,
               detalhes: buildDetalhesText(m)
             };
             if(existing[key]){
