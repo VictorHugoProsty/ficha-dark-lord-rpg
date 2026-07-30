@@ -390,10 +390,11 @@
         <div class="field"><span class="label">Raça</span>
           <select data-path="id.raca" id="select-raca">
             <option value="">Selecione...</option>
-            <option>Humano</option><option>Anão</option><option>Elfo</option><option>Dahllan</option>
-            <option>Goblin</option><option>Golem</option><option>Hynne</option><option>Kliren</option>
-            <option>Lefou</option><option>Minotauro</option><option>Qareen</option><option>Sereia</option>
-            <option>Sílfide</option><option>Suraggel</option>
+            <option>Humano</option><option>Anão</option><option>Dahllan</option><option>Elfo</option>
+            <option>Goblin</option><option>Lefou</option><option>Minotauro</option><option>Qareen</option>
+            <option>Golem</option><option>Hynne</option><option>Kliren</option><option>Medusa</option>
+            <option>Osteon</option><option>Sereia/tritão</option><option>Sílfide</option><option>Suraggel</option>
+            <option>Trog</option>
           </select>
         </div>
         <div class="field"><span class="label">Classe</span>
@@ -1639,16 +1640,29 @@
     statusEl.textContent = count+' condições/habilidades importadas pra referência.';
   });
 
+  function formatGanhoDetalhado(g){
+    var txt = g.nome || '';
+    if(g.valor_dado) txt += ' ' + (g.sinal || '+') + g.valor_dado;
+    else if(g.valor != null) txt += ' ' + (g.sinal || '+') + g.valor;
+    if(g.detalhe) txt += ' (' + g.detalhe + ')';
+    return txt;
+  }
   wireJsonImportButton('import-json-classes-racas', 'compendio-classes-racas-json-file', 'import-classes-racas-status', function(data, statusEl){
     var classes = data.classes || [];
     var racas = data.racas || [];
     classes.forEach(function(c){
       if(!c.nome) return;
-      compendioClassesRef[normalizeSearch(c.nome)] = c.poderes || [];
+      var poderes = [];
+      (c.progressao || []).forEach(function(p){
+        (p.ganhos_detalhados || []).forEach(function(g){
+          poderes.push({ nivel: p.nivel, nome: formatGanhoDetalhado(g) });
+        });
+      });
+      compendioClassesRef[normalizeSearch(c.nome)] = poderes;
     });
     racas.forEach(function(r){
       if(!r.nome) return;
-      compendioRacasRef[normalizeSearch(r.nome)] = r.poderes || [];
+      compendioRacasRef[normalizeSearch(r.nome)] = (r.habilidades || []).map(function(h){ return {nome: h.nome}; });
     });
     scheduleCompendioSave();
     statusEl.textContent = classes.length+' classes e '+racas.length+' raças importadas pra referência.';
