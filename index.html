@@ -699,6 +699,7 @@
         <option value="Universal">Só Universal</option>
       </select>
       <input type="number" id="compendio-magias-filter-circulo" placeholder="Círculo" min="0" max="9" style="max-width:100px;">
+      <button class="small" id="toggle-magias-list">▾ Mostrar lista completa</button>
       <button class="small remove-btn" id="clean-magias-sem-dados">Remover magias sem dados do JSON</button>
       <span class="hint" id="import-wiki-status"></span>
     </div>
@@ -1407,6 +1408,7 @@
   var applyArmadurasFilter = wireSearchOnlyTable('compendio-armaduras-search', 'compendio-armaduras-wrap', 'compendio-armaduras-empty-hint', compendioArmadurasBody);
   var applyItensFilter = wireSearchOnlyTable('compendio-itens-search', 'compendio-itens-wrap', 'compendio-itens-empty-hint', compendioItensBody);
 
+  var magiasForceShow = false;
   function applyMagiasFilter(forceShow){
     var q = normalizeSearch(document.getElementById('compendio-magias-search').value.trim());
     var tipoFiltro = document.getElementById('compendio-magias-filter-tipo').value;
@@ -1415,7 +1417,7 @@
     var wrap = document.getElementById('compendio-magias-wrap');
     var hint = document.getElementById('compendio-magias-empty-hint');
     var hasQuery = !!q || !!tipoFiltro || circExato !== null;
-    if(!hasQuery && !forceShow){
+    if(!hasQuery && !forceShow && !magiasForceShow){
       wrap.style.display = 'none';
       hint.style.display = '';
       return;
@@ -1437,6 +1439,11 @@
   ['compendio-magias-search','compendio-magias-filter-tipo','compendio-magias-filter-circulo'].forEach(function(id){
     var el = document.getElementById(id);
     if(el){ el.addEventListener('input', applyMagiasFilter); el.addEventListener('change', applyMagiasFilter); }
+  });
+  document.getElementById('toggle-magias-list').addEventListener('click', function(){
+    magiasForceShow = !magiasForceShow;
+    this.textContent = magiasForceShow ? '▴ Ocultar lista' : '▾ Mostrar lista completa';
+    applyMagiasFilter();
   });
 
   function wikiPageUrl(title){
