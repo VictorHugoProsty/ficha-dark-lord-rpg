@@ -656,6 +656,11 @@
   <!-- COMPENDIO -->
   <section class="panel" id="panel-compendio">
     <div class="section-title">Compêndio de Magias <span class="hint">privado da sua conta — nome + link de consulta, sem copiar texto de livro nenhum</span></div>
+    <div class="row-flex" style="margin-bottom:10px; align-items:center;">
+      <input type="text" id="compendio-magias-search" placeholder="Buscar por nome..." style="max-width:260px;">
+      <button class="small" id="import-wiki-magias">Importar todas da Tormenta Fandom Wiki</button>
+      <span class="hint" id="import-wiki-status"></span>
+    </div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Magia</th><th>Círc.</th><th>Tipo</th><th>PM</th><th>Link</th><th></th></tr></thead>
@@ -665,6 +670,9 @@
     <button class="add-row-btn small" id="add-compendio-magia">+ Adicionar magia ao compêndio</button>
 
     <div class="section-title">Compêndio de Poderes de Classe</div>
+    <div class="row-flex" style="margin-bottom:10px;">
+      <input type="text" id="compendio-poderes-search" placeholder="Buscar por nome..." style="max-width:260px;">
+    </div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Poder</th><th>Classe/Origem</th><th>Link</th><th></th></tr></thead>
@@ -1025,6 +1033,65 @@
   }
   document.addEventListener('input', function(e){ if(e.target.closest('#panel-compendio')) scheduleCompendioSave(); });
   document.addEventListener('change', function(e){ if(e.target.closest('#panel-compendio')) scheduleCompendioSave(); });
+
+  function filterCompendioTable(searchInput, tbody){
+    if(!searchInput) return;
+    searchInput.addEventListener('input', function(){
+      var q = searchInput.value.trim().toLowerCase();
+      Array.prototype.forEach.call(tbody.children, function(tr){
+        var nomeInput = tr.querySelector('[data-field="nome"]');
+        var text = nomeInput ? nomeInput.value.toLowerCase() : '';
+        tr.style.display = (!q || text.indexOf(q) > -1) ? '' : 'none';
+      });
+    });
+  }
+  filterCompendioTable(document.getElementById('compendio-magias-search'), compendioMagiasBody);
+  filterCompendioTable(document.getElementById('compendio-poderes-search'), compendioPoderesBody);
+
+  function wikiPageUrl(title){
+    return 'https://tormenta.fandom.com/pt/wiki/' + encodeURIComponent(title.replace(/ /g, '_'));
+  }
+  function importWikiCategory(categoryTitle, tipo){
+    var url = 'https://tormenta.fandom.com/pt/api.php?action=query&list=categorymembers&cmtitle='
+      + encodeURIComponent(categoryTitle) + '&format=json&cmlimit=500&origin=*';
+    return fetch(url).then(function(r){ return r.json(); }).then(function(data){
+      var members = (data.query && data.query.categorymembers) || [];
+      var existing = {};
+      Array.prototype.forEach.call(compendioMagiasBody.children, function(tr){
+        var nomeInput = tr.querySelector('[data-field="nome"]');
+        if(nomeInput) existing[nomeInput.value.trim().toLowerCase()] = true;
+      });
+      members.forEach(function(m){
+        var nome = m.title;
+        var key = nome.trim().toLowerCase();
+        if(existing[key]) return;
+        makeRow(compendioMagiasBody, compendioMagiaFields,
+          {nome:nome, circulo:'', tipo:tipo, pm:'', link:wikiPageUrl(nome)},
+          {afterCreate:enhanceCompendioMagiaRow});
+        existing[key] = true;
+      });
+      return members.length;
+    });
+  }
+  var importWikiBtn = document.getElementById('import-wiki-magias');
+  if(importWikiBtn){
+    importWikiBtn.addEventListener('click', function(){
+      var statusEl = document.getElementById('import-wiki-status');
+      importWikiBtn.disabled = true;
+      statusEl.textContent = 'Buscando na wiki...';
+      Promise.all([
+        importWikiCategory('Categoria:Magias_Arcanas', 'Arcana'),
+        importWikiCategory('Categoria:Magias_Divinas', 'Divina')
+      ]).then(function(counts){
+        scheduleCompendioSave();
+        importWikiBtn.disabled = false;
+        statusEl.textContent = counts[0]+counts[1]+' magias importadas (arcanas: '+counts[0]+', divinas: '+counts[1]+').';
+      }).catch(function(){
+        importWikiBtn.disabled = false;
+        statusEl.textContent = 'Não consegui buscar agora — tente de novo em alguns segundos.';
+      });
+    });
+  }
 
   window.__compendio = { serialize: serializeCompendio, apply: applyCompendio };
   applyCompendio(loadCompendioStored());
