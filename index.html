@@ -259,6 +259,11 @@
   .rollable:active{ transform:scale(0.94); }
 
   .dice-inline-btn{ padding:4px 6px; font-size:13px; line-height:1; flex:0 0 auto; }
+  .compendio-detail-box{
+    margin-top:6px; padding:8px 10px; font-size:12px; color:var(--ink-soft);
+    white-space:pre-wrap; max-width:360px; background:var(--bg-sunken);
+    border:1px solid var(--line); border-radius:6px; line-height:1.5;
+  }
 
   .dice-fab{
     position:fixed; right:16px; bottom:76px; z-index:8;
@@ -655,15 +660,17 @@
 
   <!-- COMPENDIO -->
   <section class="panel" id="panel-compendio">
-    <div class="section-title">Compêndio de Magias <span class="hint">privado da sua conta — nome + link de consulta, sem copiar texto de livro nenhum</span></div>
+    <div class="section-title">Compêndio de Magias <span class="hint">privado da sua conta — dados e cálculos, sem copiar texto de livro nenhum publicamente</span></div>
     <div class="row-flex" style="margin-bottom:10px; align-items:center;">
       <input type="text" id="compendio-magias-search" placeholder="Buscar por nome..." style="max-width:260px;">
       <button class="small" id="import-wiki-magias">Importar todas da Tormenta Fandom Wiki</button>
+      <button class="small" id="import-json-magias">Importar JSON (arquivo local)</button>
+      <input type="file" id="compendio-magias-json-file" accept="application/json" style="display:none">
       <span class="hint" id="import-wiki-status"></span>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Magia</th><th>Círc.</th><th>Tipo</th><th>PM</th><th>Link</th><th></th></tr></thead>
+        <thead><tr><th>Magia</th><th>Círc.</th><th>Tipo</th><th>PM</th><th>Dados</th><th>Link</th><th></th></tr></thead>
         <tbody id="compendio-magias-body"></tbody>
       </table>
     </div>
@@ -866,6 +873,8 @@
         html += '<td class="row-total rollable" data-computed="'+f.key+'" title="Clique para rolar">+0</td>';
       } else if(f.type === 'checkbox'){
         html += '<td class="chk"><input type="checkbox" class="row-field" data-field="'+f.key+'"'+(v?' checked':'')+'></td>';
+      } else if(f.type === 'hidden'){
+        html += '<td style="display:none;padding:0;border:none;"><input type="hidden" class="row-field" data-field="'+f.key+'" value="'+String(v).replace(/"/g,'&quot;')+'"></td>';
       } else {
         html += '<td class="'+(f.nameCell?'name-cell':'')+(f.narrow?' narrow':'')+'"><input class="row-field tabular" type="'+(f.type||'text')+'" data-field="'+f.key+'" value="'+String(v).replace(/"/g,'&quot;')+'" style="'+(f.width?('width:'+f.width+'px'):'')+'"></td>';
       }
@@ -934,9 +943,11 @@
   var compendioMagiaFields = [
     {key:'nome', nameCell:true, width:150},
     {key:'circulo', type:'number', width:50},
-    {key:'tipo', type:'select', options:['Arcana','Divina'], narrow:true},
+    {key:'tipo', type:'select', options:['Arcana','Divina','Universal'], narrow:true},
     {key:'pm', type:'number', width:50},
-    {key:'link', width:170}
+    {key:'dados', width:90},
+    {key:'link', width:150},
+    {key:'detalhes', type:'hidden'}
   ];
   var compendioPoderFields = [
     {key:'nome', nameCell:true, width:170},
@@ -953,24 +964,61 @@
   function enhanceCompendioMagiaRow(tr){
     var nomeInput = tr.querySelector('[data-field="nome"]');
     var circuloInput = tr.querySelector('[data-field="circulo"]');
+    var pmInput = tr.querySelector('[data-field="pm"]');
+    var dadosInput = tr.querySelector('[data-field="dados"]');
     var linkInput = tr.querySelector('[data-field="link"]');
+    var detalhesInput = tr.querySelector('[data-field="detalhes"]');
     if(!linkInput) return;
     var td = linkInput.parentElement;
     td.style.display = 'flex'; td.style.gap = '4px'; td.style.alignItems = 'center';
+
+    if(dadosInput){
+      var rollBtn = document.createElement('button');
+      rollBtn.type = 'button'; rollBtn.className = 'small dice-inline-btn'; rollBtn.title = 'Rolar dado da magia';
+      rollBtn.textContent = '🎲';
+      rollBtn.addEventListener('click', function(){
+        var spec = (dadosInput.value.split(',')[0] || '').trim();
+        if(!spec){ presentRoll(nomeInput.value || 'Magia', [], 0, null, 'Sem dado cadastrado pra essa magia.'); return; }
+        rollDamageNotation(spec, nomeInput.value || 'Magia');
+      });
+      td.appendChild(rollBtn);
+    }
     var openBtn = document.createElement('button');
     openBtn.type = 'button'; openBtn.className = 'small dice-inline-btn'; openBtn.title = 'Abrir link';
     openBtn.textContent = '🔗';
     openBtn.addEventListener('click', function(){ openLinkFrom(linkInput); });
     td.appendChild(openBtn);
+
+    if(detalhesInput){
+      var infoBtn = document.createElement('button');
+      infoBtn.type = 'button'; infoBtn.className = 'small'; infoBtn.title = 'Ver detalhes';
+      infoBtn.textContent = 'ℹ️';
+      var detailBox = null;
+      infoBtn.addEventListener('click', function(){
+        if(detailBox){ detailBox.remove(); detailBox = null; return; }
+        if(!detalhesInput.value){ return; }
+        detailBox = document.createElement('div');
+        detailBox.className = 'compendio-detail-box';
+        detailBox.textContent = detalhesInput.value;
+        nomeInput.parentElement.appendChild(detailBox);
+      });
+      td.appendChild(infoBtn);
+    }
+
     var useBtn = document.createElement('button');
     useBtn.type = 'button'; useBtn.className = 'small'; useBtn.textContent = 'Usar';
     useBtn.title = 'Adicionar à ficha atual';
     useBtn.addEventListener('click', function(){
       var circ = parseInt(circuloInput.value, 10);
       if(isNaN(circ) || circ < 0 || circ > 9) circ = 0;
+      var pieces = [nomeInput.value || 'Magia sem nome'];
+      var extra = [];
+      if(pmInput && pmInput.value) extra.push('PM '+pmInput.value);
+      if(dadosInput && dadosInput.value) extra.push(dadosInput.value);
+      if(extra.length) pieces.push('('+extra.join(', ')+')');
       var target = document.querySelector('[data-path="magias.circulo'+circ+'"]');
       if(target){
-        target.value = (target.value ? target.value + '\n' : '') + (nomeInput.value || 'Magia sem nome');
+        target.value = (target.value ? target.value + '\n' : '') + pieces.join(' ');
         scheduleSave();
       }
     });
@@ -1099,6 +1147,86 @@
         importWikiBtn.disabled = false;
         statusEl.textContent = 'Não consegui buscar agora — tente de novo em alguns segundos.';
       });
+    });
+  }
+
+  function buildDetalhesText(m){
+    var parts = [];
+    if(m.escola) parts.push('Escola: '+m.escola);
+    if(m.execucao) parts.push('Execução: '+m.execucao);
+    if(m.alcance) parts.push('Alcance: '+m.alcance);
+    if(m.alvo_area_efeito) parts.push('Alvo/Área/Efeito: '+m.alvo_area_efeito);
+    else if(m.alvo) parts.push('Alvo: '+m.alvo);
+    else if(m.area) parts.push('Área: '+m.area);
+    if(m.duracao) parts.push('Duração: '+m.duracao);
+    if(m.resistencia) parts.push('Resistência: '+m.resistencia);
+    if(m.componente_material) parts.push('Componente: '+m.componente_material);
+    if(m.aprimoramentos && m.aprimoramentos.length){
+      parts.push('Aprimoramentos:');
+      m.aprimoramentos.forEach(function(a){
+        var linha = '+'+a.custo_pm+' PM: '+a.efeito;
+        if(a.restricao) linha += ' ('+a.restricao+')';
+        parts.push(linha);
+      });
+    }
+    return parts.join('\n');
+  }
+
+  var importJsonBtn = document.getElementById('import-json-magias');
+  var importJsonFile = document.getElementById('compendio-magias-json-file');
+  if(importJsonBtn && importJsonFile){
+    importJsonBtn.addEventListener('click', function(){ importJsonFile.click(); });
+    importJsonFile.addEventListener('change', function(e){
+      var file = e.target.files[0];
+      if(!file) return;
+      var statusEl = document.getElementById('import-wiki-status');
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        try{
+          var data = JSON.parse(ev.target.result);
+          var list = data.magias || (Array.isArray(data) ? data : []);
+          var existing = {};
+          Array.prototype.forEach.call(compendioMagiasBody.children, function(tr){
+            var n = tr.querySelector('[data-field="nome"]');
+            if(n) existing[n.value.trim().toLowerCase()] = true;
+          });
+          var added = 0, updated = 0;
+          list.forEach(function(m){
+            var nome = m.nome;
+            if(!nome) return;
+            var key = nome.trim().toLowerCase();
+            var dados = (m.dados_citados || []).join(', ');
+            var rowData = {
+              nome: nome, circulo: m.circulo || '', tipo: m.tipo || 'Arcana',
+              pm: m.custo_pm_base || '', dados: dados, link: wikiPageUrl(nome),
+              detalhes: buildDetalhesText(m)
+            };
+            if(existing[key]){
+              var existingRow = Array.prototype.filter.call(compendioMagiasBody.children, function(tr){
+                var n = tr.querySelector('[data-field="nome"]');
+                return n && n.value.trim().toLowerCase() === key;
+              })[0];
+              if(existingRow){
+                Object.keys(rowData).forEach(function(k){
+                  var el = existingRow.querySelector('[data-field="'+k+'"]');
+                  if(el) el.value = rowData[k];
+                });
+                updated++;
+              }
+              return;
+            }
+            makeRow(compendioMagiasBody, compendioMagiaFields, rowData, {afterCreate:enhanceCompendioMagiaRow});
+            existing[key] = true;
+            added++;
+          });
+          scheduleCompendioSave();
+          statusEl.textContent = added+' magias novas e '+updated+' atualizadas a partir do arquivo JSON.';
+        }catch(err){
+          alert('Não consegui ler esse arquivo — confirme que é um JSON válido no formato esperado.');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
     });
   }
 
