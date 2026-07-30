@@ -669,7 +669,7 @@
         <option value="Divina">Só Divina</option>
         <option value="Universal">Só Universal</option>
       </select>
-      <input type="number" id="compendio-magias-filter-circulo" placeholder="Círc. máx." style="max-width:100px;">
+      <input type="number" id="compendio-magias-filter-circulo" placeholder="Círculo" min="0" max="9" style="max-width:100px;">
       <button class="small" id="import-wiki-magias">Importar todas da Tormenta Fandom Wiki</button>
       <button class="small" id="import-json-magias">Importar JSON (arquivo local)</button>
       <input type="file" id="compendio-magias-json-file" accept="application/json" style="display:none">
@@ -688,21 +688,72 @@
     <div class="section-title">Compêndio de Poderes de Classe</div>
     <div class="row-flex" style="margin-bottom:10px;">
       <input type="text" id="compendio-poderes-search" placeholder="Buscar por nome..." style="max-width:260px;">
+      <button class="small" id="import-json-poderes">Importar JSON (arquivo local)</button>
+      <input type="file" id="compendio-poderes-json-file" accept="application/json" style="display:none">
+      <span class="hint" id="import-poderes-status"></span>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Poder</th><th>Classe/Origem</th><th>Link</th><th></th></tr></thead>
+        <thead><tr><th>Poder</th><th>Classe/Origem</th><th>Link / Ações</th><th></th></tr></thead>
         <tbody id="compendio-poderes-body"></tbody>
       </table>
     </div>
     <button class="add-row-btn small" id="add-compendio-poder">+ Adicionar poder ao compêndio</button>
 
+    <div class="section-title">Referência de Perícias e Condições <span class="hint">só descrições — aparecem no ℹ️ das abas Perícias e Atributos</span></div>
+    <div class="row-flex" style="margin-bottom:10px;">
+      <button class="small" id="import-json-pericias">Importar JSON de Perícias</button>
+      <input type="file" id="compendio-pericias-json-file" accept="application/json" style="display:none">
+      <button class="small" id="import-json-condicoes">Importar JSON de Condições</button>
+      <input type="file" id="compendio-condicoes-json-file" accept="application/json" style="display:none">
+      <span class="hint" id="import-ref-status"></span>
+    </div>
+
+    <div class="section-title">Compêndio de Equipamento <span class="hint">busque e clique em "Usar" pra jogar na ficha (Armas/Armaduras no Combate, Itens no Equipamento)</span></div>
+    <div class="row-flex" style="margin-bottom:10px;">
+      <button class="small" id="import-json-equipamento">Importar JSON de Equipamento</button>
+      <input type="file" id="compendio-equipamento-json-file" accept="application/json" style="display:none">
+      <span class="hint" id="import-equipamento-status"></span>
+    </div>
+
+    <div class="section-title" style="font-size:15px;">Armas</div>
+    <input type="text" id="compendio-armas-search" placeholder="Buscar arma por nome..." style="max-width:260px;margin-bottom:8px;">
+    <div class="hint" id="compendio-armas-empty-hint" style="padding:10px 0;">Digite um nome pra buscar armas no compêndio.</div>
+    <div class="table-wrap" id="compendio-armas-wrap" style="display:none;">
+      <table>
+        <thead><tr><th>Arma</th><th>Categoria</th><th>Dano</th><th>Crít.</th><th>Alcance</th><th>Peso</th><th>Preço / Ações</th><th></th></tr></thead>
+        <tbody id="compendio-armas-body"></tbody>
+      </table>
+    </div>
+
+    <div class="section-title" style="font-size:15px;">Armaduras &amp; Escudos</div>
+    <input type="text" id="compendio-armaduras-search" placeholder="Buscar armadura/escudo por nome..." style="max-width:260px;margin-bottom:8px;">
+    <div class="hint" id="compendio-armaduras-empty-hint" style="padding:10px 0;">Digite um nome pra buscar armaduras/escudos no compêndio.</div>
+    <div class="table-wrap" id="compendio-armaduras-wrap" style="display:none;">
+      <table>
+        <thead><tr><th>Armadura/Escudo</th><th>Categoria</th><th>Bônus CA</th><th>Penalidade</th><th>Peso</th><th>Preço / Ações</th><th></th></tr></thead>
+        <tbody id="compendio-armaduras-body"></tbody>
+      </table>
+    </div>
+
+    <div class="section-title" style="font-size:15px;">Itens Gerais</div>
+    <input type="text" id="compendio-itens-search" placeholder="Buscar item por nome..." style="max-width:260px;margin-bottom:8px;">
+    <div class="hint" id="compendio-itens-empty-hint" style="padding:10px 0;">Digite um nome pra buscar itens no compêndio.</div>
+    <div class="table-wrap" id="compendio-itens-wrap" style="display:none;">
+      <table>
+        <thead><tr><th>Item</th><th>Categoria</th><th>Peso</th><th>Preço / Ações</th><th></th></tr></thead>
+        <tbody id="compendio-itens-body"></tbody>
+      </table>
+    </div>
+
     <details class="help">
       <summary>Como funciona esse compêndio</summary>
       <div class="help-body">
         Fica salvo só na sua conta (neste navegador, e na nuvem se você estiver logado) — ninguém mais vê.<br>
-        Magias: use a busca por nome, o filtro de tipo ou o círculo máximo pra encontrar a magia no compêndio (a lista completa só aparece quando algum filtro está ativo). O botão "Usar" joga a magia direto pro campo do círculo certo na ficha.<br>
-        Poderes: cadastre o nome e um link de onde consultar a descrição completa. O botão 🔗 abre o link; o botão "Usar" joga o nome direto pras Habilidades de Classe.
+        Magias: use a busca por nome, o filtro de tipo ou o círculo (exato) pra encontrar a magia no compêndio (a lista completa só aparece quando algum filtro está ativo). O botão "Usar" joga a magia direto pro campo do círculo certo na ficha.<br>
+        Poderes: cadastre nome/link, ou importe um JSON com grupo/pré-requisito/descrição pra ver tudo no botão ℹ️. O botão 🔗 abre o link; o botão "Usar" joga o nome direto pras Habilidades de Classe.<br>
+        Perícias e Condições: importe os JSONs de referência aqui e as descrições aparecem direto nos botões ℹ️ das abas Perícias e Atributos, sem precisar de tabela própria.<br>
+        Equipamento: busque armas, armaduras/escudos ou itens (a lista só aparece com busca ativa) e clique "Usar" pra jogar direto nas tabelas de Armas/Armadura (aba Combate) ou Equipamento.
       </div>
     </details>
   </section>
@@ -865,6 +916,28 @@
       '<td><input type="number" value="0" class="tabular pericia-input" data-path="pericias.'+slug+'.outros" data-skill="'+slug+'" data-attr="'+attr+'" style="width:52px"></td>'+
       '<td class="row-total tabular rollable" id="total-'+slug+'" title="Clique para rolar">+0</td>';
     periciasBody.appendChild(tr);
+    var pericInfoBtn = document.createElement('button');
+    pericInfoBtn.type = 'button'; pericInfoBtn.className = 'small'; pericInfoBtn.title = 'Ver descrição da perícia';
+    pericInfoBtn.textContent = 'ℹ️';
+    pericInfoBtn.style.marginLeft = '6px';
+    var pericDetailBox = null;
+    pericInfoBtn.addEventListener('click', function(){
+      if(pericDetailBox){ pericDetailBox.remove(); pericDetailBox = null; return; }
+      var ref = lookupPericiaRef(name);
+      pericDetailBox = document.createElement('div');
+      pericDetailBox.className = 'compendio-detail-box';
+      if(ref){
+        var lines = ref.descricao ? [ref.descricao] : [];
+        (ref.usos||[]).forEach(function(u){
+          lines.push('• '+u.nome+(u.cd?' (CD '+u.cd+')':'')+': '+u.descricao);
+        });
+        pericDetailBox.textContent = lines.join('\n');
+      } else {
+        pericDetailBox.textContent = 'Sem descrição importada ainda pra essa perícia — importe o JSON de referência no Compêndio.';
+      }
+      tr.querySelector('.name-cell').appendChild(pericDetailBox);
+    });
+    tr.querySelector('.name-cell').appendChild(pericInfoBtn);
   });
 
   function makeRow(container, fields, values, opts){
@@ -949,6 +1022,9 @@
   var COMPENDIO_KEY = 'dark-lord-rpg-compendio-v1';
   var compendioMagiasBody = document.getElementById('compendio-magias-body');
   var compendioPoderesBody = document.getElementById('compendio-poderes-body');
+  var compendioArmasBody = document.getElementById('compendio-armas-body');
+  var compendioArmadurasBody = document.getElementById('compendio-armaduras-body');
+  var compendioItensBody = document.getElementById('compendio-itens-body');
   var compendioMagiaFields = [
     {key:'nome', nameCell:true, width:150},
     {key:'circulo', type:'number', width:50},
@@ -960,7 +1036,35 @@
   var compendioPoderFields = [
     {key:'nome', nameCell:true, width:170},
     {key:'origem', width:130},
-    {key:'link', width:170}
+    {key:'link', width:170},
+    {key:'detalhes', type:'hidden'}
+  ];
+  var compendioArmaFields = [
+    {key:'nome', nameCell:true, width:140},
+    {key:'categoria', width:120},
+    {key:'dano', width:55},
+    {key:'critico', width:50},
+    {key:'alcance', width:65},
+    {key:'peso', width:60},
+    {key:'preco', width:80},
+    {key:'danoTipo', type:'hidden'},
+    {key:'detalhes', type:'hidden'}
+  ];
+  var compendioArmaduraFields = [
+    {key:'nome', nameCell:true, width:150},
+    {key:'categoria', width:120},
+    {key:'bonus_defesa', width:60},
+    {key:'penalidade_armadura', width:60},
+    {key:'peso', width:60},
+    {key:'preco', width:80},
+    {key:'detalhes', type:'hidden'}
+  ];
+  var compendioItemFields = [
+    {key:'nome', nameCell:true, width:170},
+    {key:'categoria', width:120},
+    {key:'peso', width:60},
+    {key:'preco', width:80},
+    {key:'detalhes', type:'hidden'}
   ];
 
   function openLinkFrom(input){
@@ -982,10 +1086,25 @@
     var rollBtn = document.createElement('button');
     rollBtn.type = 'button'; rollBtn.className = 'small dice-inline-btn'; rollBtn.title = 'Rolar dado da magia';
     rollBtn.textContent = '🎲';
+    var rollMenu = null;
     rollBtn.addEventListener('click', function(){
-      var spec = (dadosInput.value.split(',')[0] || '').trim();
-      if(!spec){ presentRoll(nomeInput.value || 'Magia', [], 0, null, 'Sem dado cadastrado pra essa magia.'); return; }
-      rollDamageNotation(spec, nomeInput.value || 'Magia');
+      if(rollMenu){ rollMenu.remove(); rollMenu = null; return; }
+      var specs = (dadosInput.value || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+      if(!specs.length){ presentRoll(nomeInput.value || 'Magia', [], 0, null, 'Sem dado cadastrado pra essa magia.'); return; }
+      if(specs.length === 1){ rollDamageNotation(specs[0], nomeInput.value || 'Magia'); return; }
+      rollMenu = document.createElement('div');
+      rollMenu.className = 'compendio-detail-box';
+      specs.forEach(function(spec){
+        var opt = document.createElement('button');
+        opt.type = 'button'; opt.className = 'small'; opt.style.marginRight = '4px'; opt.style.marginBottom = '4px';
+        opt.textContent = spec;
+        opt.addEventListener('click', function(){
+          rollDamageNotation(spec, nomeInput.value || 'Magia');
+          rollMenu.remove(); rollMenu = null;
+        });
+        rollMenu.appendChild(opt);
+      });
+      nomeInput.parentElement.appendChild(rollMenu);
     });
     td.appendChild(rollBtn);
 
@@ -1021,21 +1140,44 @@
       if(target){
         target.value = (target.value ? target.value + '\n' : '') + pieces.join(' ');
         scheduleSave();
+        flashAdded(useBtn, 'Adicionado ao Círculo '+circ+'!');
       }
     });
     td.appendChild(useBtn);
   }
+  function flashAdded(btn, msg){
+    var original = btn.textContent;
+    btn.textContent = '✓ '+msg;
+    btn.disabled = true;
+    setTimeout(function(){ btn.textContent = original; btn.disabled = false; }, 1600);
+  }
   function enhanceCompendioPoderRow(tr){
     var nomeInput = tr.querySelector('[data-field="nome"]');
     var linkInput = tr.querySelector('[data-field="link"]');
+    var detalhesInput = tr.querySelector('[data-field="detalhes"]');
     if(!linkInput) return;
     var td = linkInput.parentElement;
-    td.style.display = 'flex'; td.style.gap = '4px'; td.style.alignItems = 'center';
+    td.style.display = 'flex'; td.style.flexWrap = 'wrap'; td.style.gap = '4px'; td.style.alignItems = 'center';
     var openBtn = document.createElement('button');
     openBtn.type = 'button'; openBtn.className = 'small dice-inline-btn'; openBtn.title = 'Abrir link';
     openBtn.textContent = '🔗';
     openBtn.addEventListener('click', function(){ openLinkFrom(linkInput); });
     td.appendChild(openBtn);
+
+    var infoBtn = document.createElement('button');
+    infoBtn.type = 'button'; infoBtn.className = 'small'; infoBtn.title = 'Ver detalhes do poder';
+    infoBtn.textContent = 'ℹ️';
+    var detailBox = null;
+    infoBtn.addEventListener('click', function(){
+      if(detailBox){ detailBox.remove(); detailBox = null; return; }
+      detailBox = document.createElement('div');
+      detailBox.className = 'compendio-detail-box';
+      detailBox.textContent = (detalhesInput && detalhesInput.value)
+        || 'Sem detalhes cadastrados ainda pra esse poder — importe um JSON com os dados dele, ou preencha na mão.';
+      nomeInput.parentElement.appendChild(detailBox);
+    });
+    td.appendChild(infoBtn);
+
     var useBtn = document.createElement('button');
     useBtn.type = 'button'; useBtn.className = 'small'; useBtn.textContent = 'Usar';
     useBtn.title = 'Adicionar às Habilidades de Classe';
@@ -1044,9 +1186,95 @@
       if(target){
         target.value = (target.value ? target.value + '\n' : '') + (nomeInput.value || 'Poder sem nome');
         scheduleSave();
+        flashAdded(useBtn, 'Adicionado!');
       }
     });
     td.appendChild(useBtn);
+  }
+
+  function addDetailButton(td, anchorCell, detalhesInput, fallbackMsg){
+    var infoBtn = document.createElement('button');
+    infoBtn.type = 'button'; infoBtn.className = 'small'; infoBtn.title = 'Ver detalhes';
+    infoBtn.textContent = 'ℹ️';
+    var box = null;
+    infoBtn.addEventListener('click', function(){
+      if(box){ box.remove(); box = null; return; }
+      box = document.createElement('div');
+      box.className = 'compendio-detail-box';
+      box.textContent = (detalhesInput && detalhesInput.value) || fallbackMsg;
+      anchorCell.appendChild(box);
+    });
+    td.appendChild(infoBtn);
+  }
+  function addUseButton(td, title, onClick){
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'small'; btn.textContent = 'Usar'; btn.title = title;
+    btn.addEventListener('click', function(){ onClick(btn); });
+    td.appendChild(btn);
+    return btn;
+  }
+
+  function parsePesoKg(peso){
+    if(!peso) return '';
+    var m = String(peso).replace(',', '.').match(/[\d.]+/);
+    return m ? parseFloat(m[0]) : '';
+  }
+
+  function enhanceCompendioArmaRow(tr){
+    var nomeInput = tr.querySelector('[data-field="nome"]');
+    var danoInput = tr.querySelector('[data-field="dano"]');
+    var criticoInput = tr.querySelector('[data-field="critico"]');
+    var alcanceInput = tr.querySelector('[data-field="alcance"]');
+    var danoTipoInput = tr.querySelector('[data-field="danoTipo"]');
+    var precoInput = tr.querySelector('[data-field="preco"]');
+    var detalhesInput = tr.querySelector('[data-field="detalhes"]');
+    if(!precoInput) return;
+    var td = precoInput.parentElement;
+    td.style.display = 'flex'; td.style.flexWrap = 'wrap'; td.style.gap = '4px'; td.style.alignItems = 'center';
+    addDetailButton(td, nomeInput.parentElement, detalhesInput, 'Sem detalhes cadastrados pra essa arma — importe o JSON de Equipamento.');
+    addUseButton(td, 'Adicionar na tabela de Armas (aba Combate)', function(btn){
+      makeRow(armasBody, armaFields, {
+        nome: nomeInput.value || 'Arma sem nome', bonus: 0,
+        dano: danoInput.value || '', critico: criticoInput.value || '',
+        distancia: alcanceInput.value || '', tipo: (danoTipoInput && danoTipoInput.value) || ''
+      }, {afterCreate: enhanceArmaRow});
+      scheduleSave();
+      flashAdded(btn, 'Adicionado!');
+    });
+  }
+  function enhanceCompendioArmaduraRow(tr){
+    var nomeInput = tr.querySelector('[data-field="nome"]');
+    var bonusInput = tr.querySelector('[data-field="bonus_defesa"]');
+    var penalidadeInput = tr.querySelector('[data-field="penalidade_armadura"]');
+    var precoInput = tr.querySelector('[data-field="preco"]');
+    var detalhesInput = tr.querySelector('[data-field="detalhes"]');
+    if(!precoInput) return;
+    var td = precoInput.parentElement;
+    td.style.display = 'flex'; td.style.flexWrap = 'wrap'; td.style.gap = '4px'; td.style.alignItems = 'center';
+    addDetailButton(td, nomeInput.parentElement, detalhesInput, 'Sem detalhes cadastrados pra essa armadura/escudo — importe o JSON de Equipamento.');
+    addUseButton(td, 'Adicionar na tabela de Armadura/Escudo (aba Combate)', function(btn){
+      makeRow(armadurasBody, armaduraFields, {
+        nome: nomeInput.value || 'Item sem nome', bonusCA: bonusInput.value || 0,
+        maxDes: '', penalidade: penalidadeInput.value || 0
+      });
+      scheduleSave();
+      flashAdded(btn, 'Adicionado!');
+    });
+  }
+  function enhanceCompendioItemRow(tr){
+    var nomeInput = tr.querySelector('[data-field="nome"]');
+    var pesoInput = tr.querySelector('[data-field="peso"]');
+    var precoInput = tr.querySelector('[data-field="preco"]');
+    var detalhesInput = tr.querySelector('[data-field="detalhes"]');
+    if(!precoInput) return;
+    var td = precoInput.parentElement;
+    td.style.display = 'flex'; td.style.flexWrap = 'wrap'; td.style.gap = '4px'; td.style.alignItems = 'center';
+    addDetailButton(td, nomeInput.parentElement, detalhesInput, 'Sem detalhes cadastrados pra esse item — importe o JSON de Equipamento.');
+    addUseButton(td, 'Adicionar na tabela de Equipamento', function(btn){
+      makeRow(itensBody, itemFields, { nome: nomeInput.value || 'Item sem nome', peso: parsePesoKg(pesoInput.value) });
+      scheduleSave();
+      flashAdded(btn, 'Adicionado!');
+    });
   }
 
   document.getElementById('add-compendio-magia').addEventListener('click', function(){
@@ -1059,17 +1287,32 @@
     scheduleCompendioSave();
   });
 
+  var compendioPericiasRef = {};
+  var compendioCondicoesRef = {};
   function serializeCompendio(){
     return {
       magias: collectRows(compendioMagiasBody, compendioMagiaFields),
-      poderes: collectRows(compendioPoderesBody, compendioPoderFields)
+      poderes: collectRows(compendioPoderesBody, compendioPoderFields),
+      armas: collectRows(compendioArmasBody, compendioArmaFields),
+      armadurasEscudos: collectRows(compendioArmadurasBody, compendioArmaduraFields),
+      itensGerais: collectRows(compendioItensBody, compendioItemFields),
+      periciasRef: compendioPericiasRef,
+      condicoesRef: compendioCondicoesRef
     };
   }
   function applyCompendio(obj){
     obj = obj || {};
     fillRows(compendioMagiasBody, compendioMagiaFields, obj.magias, {afterCreate:enhanceCompendioMagiaRow});
     fillRows(compendioPoderesBody, compendioPoderFields, obj.poderes, {afterCreate:enhanceCompendioPoderRow});
+    fillRows(compendioArmasBody, compendioArmaFields, obj.armas, {afterCreate:enhanceCompendioArmaRow});
+    fillRows(compendioArmadurasBody, compendioArmaduraFields, obj.armadurasEscudos, {afterCreate:enhanceCompendioArmaduraRow});
+    fillRows(compendioItensBody, compendioItemFields, obj.itensGerais, {afterCreate:enhanceCompendioItemRow});
+    compendioPericiasRef = obj.periciasRef || {};
+    compendioCondicoesRef = obj.condicoesRef || {};
     applyMagiasFilter();
+    if(typeof applyArmasFilter === 'function') applyArmasFilter();
+    if(typeof applyArmadurasFilter === 'function') applyArmadurasFilter();
+    if(typeof applyItensFilter === 'function') applyItensFilter();
   }
   function persistCompendio(){ try{ localStorage.setItem(COMPENDIO_KEY, JSON.stringify(serializeCompendio())); }catch(e){} }
   function loadCompendioStored(){ try{ var raw = localStorage.getItem(COMPENDIO_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
@@ -1101,14 +1344,36 @@
   }
   filterCompendioTable(document.getElementById('compendio-poderes-search'), compendioPoderesBody);
 
+  function wireSearchOnlyTable(searchId, wrapId, hintId, tbody){
+    var search = document.getElementById(searchId);
+    var wrap = document.getElementById(wrapId);
+    var hint = document.getElementById(hintId);
+    function apply(forceShow){
+      var q = normalizeSearch(search.value.trim());
+      if(!q && !forceShow){ wrap.style.display = 'none'; hint.style.display = ''; return; }
+      wrap.style.display = ''; hint.style.display = 'none';
+      Array.prototype.forEach.call(tbody.children, function(tr){
+        var nomeInput = tr.querySelector('[data-field="nome"]');
+        var text = nomeInput ? normalizeSearch(nomeInput.value) : '';
+        tr.style.display = (!q || text.indexOf(q) > -1) ? '' : 'none';
+      });
+    }
+    search.addEventListener('input', function(){ apply(false); });
+    apply(false);
+    return apply;
+  }
+  var applyArmasFilter = wireSearchOnlyTable('compendio-armas-search', 'compendio-armas-wrap', 'compendio-armas-empty-hint', compendioArmasBody);
+  var applyArmadurasFilter = wireSearchOnlyTable('compendio-armaduras-search', 'compendio-armaduras-wrap', 'compendio-armaduras-empty-hint', compendioArmadurasBody);
+  var applyItensFilter = wireSearchOnlyTable('compendio-itens-search', 'compendio-itens-wrap', 'compendio-itens-empty-hint', compendioItensBody);
+
   function applyMagiasFilter(forceShow){
     var q = normalizeSearch(document.getElementById('compendio-magias-search').value.trim());
     var tipoFiltro = document.getElementById('compendio-magias-filter-tipo').value;
-    var circMaxRaw = document.getElementById('compendio-magias-filter-circulo').value;
-    var circMax = circMaxRaw === '' ? null : parseInt(circMaxRaw, 10);
+    var circRaw = document.getElementById('compendio-magias-filter-circulo').value;
+    var circExato = circRaw === '' ? null : parseInt(circRaw, 10);
     var wrap = document.getElementById('compendio-magias-wrap');
     var hint = document.getElementById('compendio-magias-empty-hint');
-    var hasQuery = !!q || !!tipoFiltro || circMax !== null;
+    var hasQuery = !!q || !!tipoFiltro || circExato !== null;
     if(!hasQuery && !forceShow){
       wrap.style.display = 'none';
       hint.style.display = '';
@@ -1124,7 +1389,7 @@
       var matchNome = !q || nomeText.indexOf(q) > -1;
       var matchTipo = !tipoFiltro || (tipoInput && tipoInput.value === tipoFiltro);
       var circVal = circuloInput ? parseInt(circuloInput.value, 10) : NaN;
-      var matchCirculo = (circMax === null) || isNaN(circVal) || circVal <= circMax;
+      var matchCirculo = (circExato === null) || circVal === circExato;
       tr.style.display = (matchNome && matchTipo && matchCirculo) ? '' : 'none';
     });
   }
@@ -1206,63 +1471,157 @@
     return parts.join('\n');
   }
 
-  var importJsonBtn = document.getElementById('import-json-magias');
-  var importJsonFile = document.getElementById('compendio-magias-json-file');
-  if(importJsonBtn && importJsonFile){
-    importJsonBtn.addEventListener('click', function(){ importJsonFile.click(); });
-    importJsonFile.addEventListener('change', function(e){
-      var file = e.target.files[0];
-      if(!file) return;
-      var statusEl = document.getElementById('import-wiki-status');
+  function mergeRowsFromJson(list, tbody, fields, afterCreate, buildRowData){
+    var existingByKey = {};
+    Array.prototype.forEach.call(tbody.children, function(tr){
+      var n = tr.querySelector('[data-field="nome"]');
+      if(n) existingByKey[n.value.trim().toLowerCase()] = tr;
+    });
+    var added = 0, updated = 0;
+    list.forEach(function(item){
+      var rowData = buildRowData(item);
+      if(!rowData || !rowData.nome) return;
+      var key = rowData.nome.trim().toLowerCase();
+      var existingRow = existingByKey[key];
+      if(existingRow){
+        Object.keys(rowData).forEach(function(k){
+          var el = existingRow.querySelector('[data-field="'+k+'"]');
+          if(el) el.value = rowData[k];
+        });
+        updated++;
+        return;
+      }
+      var tr = makeRow(tbody, fields, rowData, {afterCreate:afterCreate});
+      existingByKey[key] = tr;
+      added++;
+    });
+    return {added:added, updated:updated};
+  }
+
+  function wireJsonImportButton(btnId, fileId, statusId, onList){
+    var btn = document.getElementById(btnId);
+    var file = document.getElementById(fileId);
+    if(!btn || !file) return;
+    btn.addEventListener('click', function(){ file.click(); });
+    file.addEventListener('change', function(e){
+      var f = e.target.files[0];
+      if(!f) return;
+      var statusEl = document.getElementById(statusId);
       var reader = new FileReader();
       reader.onload = function(ev){
         try{
           var data = JSON.parse(ev.target.result);
-          var list = data.magias || (Array.isArray(data) ? data : []);
-          var existing = {};
-          Array.prototype.forEach.call(compendioMagiasBody.children, function(tr){
-            var n = tr.querySelector('[data-field="nome"]');
-            if(n) existing[n.value.trim().toLowerCase()] = true;
-          });
-          var added = 0, updated = 0;
-          list.forEach(function(m){
-            var nome = m.nome;
-            if(!nome) return;
-            var key = nome.trim().toLowerCase();
-            var dados = (m.dados_citados || []).join(', ');
-            var rowData = {
-              nome: nome, circulo: m.circulo || '', tipo: m.tipo || 'Arcana',
-              pm: m.custo_pm_base || '', dados: dados,
-              detalhes: buildDetalhesText(m)
-            };
-            if(existing[key]){
-              var existingRow = Array.prototype.filter.call(compendioMagiasBody.children, function(tr){
-                var n = tr.querySelector('[data-field="nome"]');
-                return n && n.value.trim().toLowerCase() === key;
-              })[0];
-              if(existingRow){
-                Object.keys(rowData).forEach(function(k){
-                  var el = existingRow.querySelector('[data-field="'+k+'"]');
-                  if(el) el.value = rowData[k];
-                });
-                updated++;
-              }
-              return;
-            }
-            makeRow(compendioMagiasBody, compendioMagiaFields, rowData, {afterCreate:enhanceCompendioMagiaRow});
-            existing[key] = true;
-            added++;
-          });
-          scheduleCompendioSave();
-          statusEl.textContent = added+' magias novas e '+updated+' atualizadas a partir do arquivo JSON.';
+          onList(data, statusEl);
         }catch(err){
           alert('Não consegui ler esse arquivo — confirme que é um JSON válido no formato esperado.');
         }
       };
-      reader.readAsText(file);
+      reader.readAsText(f);
       e.target.value = '';
     });
   }
+
+  wireJsonImportButton('import-json-magias', 'compendio-magias-json-file', 'import-wiki-status', function(data, statusEl){
+    var list = data.magias || (Array.isArray(data) ? data : []);
+    var result = mergeRowsFromJson(list, compendioMagiasBody, compendioMagiaFields, enhanceCompendioMagiaRow, function(m){
+      if(!m.nome) return null;
+      return {
+        nome: m.nome, circulo: m.circulo || '', tipo: m.tipo || 'Arcana',
+        pm: m.custo_pm_base || '', dados: (m.dados_citados || []).join(', '),
+        detalhes: buildDetalhesText(m)
+      };
+    });
+    scheduleCompendioSave();
+    applyMagiasFilter();
+    statusEl.textContent = result.added+' magias novas e '+result.updated+' atualizadas a partir do arquivo JSON.';
+  });
+
+  function buildPoderDetalhesText(p){
+    var parts = [];
+    if(p.grupo) parts.push('Grupo: '+p.grupo);
+    if(p.deus) parts.push('Deus: '+p.deus);
+    if(p.pre_requisito) parts.push('Pré-requisito: '+p.pre_requisito);
+    if(p.descricao) parts.push(p.descricao);
+    return parts.join('\n');
+  }
+  wireJsonImportButton('import-json-poderes', 'compendio-poderes-json-file', 'import-poderes-status', function(data, statusEl){
+    var list = data.poderes || (Array.isArray(data) ? data : []);
+    var result = mergeRowsFromJson(list, compendioPoderesBody, compendioPoderFields, enhanceCompendioPoderRow, function(p){
+      if(!p.nome) return null;
+      return { nome: p.nome, origem: p.grupo || '', detalhes: buildPoderDetalhesText(p) };
+    });
+    scheduleCompendioSave();
+    statusEl.textContent = result.added+' poderes novos e '+result.updated+' atualizados a partir do arquivo JSON.';
+  });
+
+  var PERICIA_NAME_ALIASES = {
+    'adestrar animais': 'adestramento',
+    'identificar magia': 'misticismo',
+    'obter informacao': 'investigacao'
+  };
+  function lookupPericiaRef(name){
+    var key = normalizeSearch(name);
+    key = PERICIA_NAME_ALIASES[key] || key;
+    return compendioPericiasRef[key];
+  }
+  wireJsonImportButton('import-json-pericias', 'compendio-pericias-json-file', 'import-ref-status', function(data, statusEl){
+    var list = data.pericias || [];
+    var count = 0;
+    list.forEach(function(p){
+      if(!p.nome) return;
+      compendioPericiasRef[normalizeSearch(p.nome)] = { descricao: p.descricao || '', usos: p.usos || [] };
+      count++;
+    });
+    scheduleCompendioSave();
+    statusEl.textContent = count+' perícias importadas pra referência.';
+  });
+
+  function lookupCondicaoRef(name){
+    return compendioCondicoesRef[normalizeSearch(name)];
+  }
+  wireJsonImportButton('import-json-condicoes', 'compendio-condicoes-json-file', 'import-ref-status', function(data, statusEl){
+    var lists = (data.condicoes || []).concat(data.habilidades_de_criaturas || []);
+    var count = 0;
+    lists.forEach(function(c){
+      if(!c.nome) return;
+      compendioCondicoesRef[normalizeSearch(c.nome)] = c.descricao || '';
+      count++;
+    });
+    scheduleCompendioSave();
+    statusEl.textContent = count+' condições/habilidades importadas pra referência.';
+  });
+
+  function buildEquipDetalhesText(parts){ return parts.filter(Boolean).join('\n'); }
+  wireJsonImportButton('import-json-equipamento', 'compendio-equipamento-json-file', 'import-equipamento-status', function(data, statusEl){
+    var rArmas = mergeRowsFromJson(data.armas || [], compendioArmasBody, compendioArmaFields, enhanceCompendioArmaRow, function(a){
+      if(!a.nome) return null;
+      return {
+        nome: a.nome, categoria: a.categoria || '', dano: a.dano || '', critico: a.critico || '',
+        alcance: a.alcance || '', peso: a.peso || '', preco: a.preco || '', danoTipo: a.tipo || '',
+        detalhes: buildEquipDetalhesText(['Proficiência: '+(a.proficiencia||'—'), 'Tipo de dano: '+(a.tipo||'—')])
+      };
+    });
+    var rArmaduras = mergeRowsFromJson(data.armaduras_escudos || [], compendioArmadurasBody, compendioArmaduraFields, enhanceCompendioArmaduraRow, function(a){
+      if(!a.nome) return null;
+      return {
+        nome: a.nome, categoria: a.categoria || '', bonus_defesa: a.bonus_defesa != null ? a.bonus_defesa : '',
+        penalidade_armadura: a.penalidade_armadura != null ? a.penalidade_armadura : '', peso: a.peso || '', preco: a.preco || '',
+        detalhes: buildEquipDetalhesText(['Categoria: '+(a.categoria||'—')])
+      };
+    });
+    var rItens = mergeRowsFromJson(data.itens_servicos || [], compendioItensBody, compendioItemFields, enhanceCompendioItemRow, function(i){
+      if(!i.nome_completo && !i.nome) return null;
+      return {
+        nome: i.nome_completo || i.nome, categoria: i.categoria || '', peso: i.peso || '', preco: i.preco || '',
+        detalhes: buildEquipDetalhesText([i.subgrupo ? 'Subgrupo: '+i.subgrupo : ''])
+      };
+    });
+    scheduleCompendioSave();
+    applyArmasFilter(); applyArmadurasFilter(); applyItensFilter();
+    var totalAdded = rArmas.added + rArmaduras.added + rItens.added;
+    var totalUpdated = rArmas.updated + rArmaduras.updated + rItens.updated;
+    statusEl.textContent = totalAdded+' itens de equipamento novos e '+totalUpdated+' atualizados ('+rArmas.added+' armas, '+rArmaduras.added+' armaduras/escudos, '+rItens.added+' itens gerais).';
+  });
 
   var cleanMagiasBtn = document.getElementById('clean-magias-sem-dados');
   if(cleanMagiasBtn){
@@ -1293,6 +1652,12 @@
   });
 
   var CONDITIONS = ['Abalado','Agarrado','Amedrontado','Atordoado','Caído','Cego','Confuso','Enfeitiçado','Enjoado','Envenenado','Exausto','Fatigado','Imóvel','Inconsciente','Invisível','Lento','Paralisado','Surdo'];
+  var CONDICAO_NAME_ALIASES = { 'amedrontado': 'apavorado' };
+  function lookupCondicaoRefByLabel(name){
+    var key = normalizeSearch(name);
+    key = CONDICAO_NAME_ALIASES[key] || key;
+    return compendioCondicoesRef[key];
+  }
   var conditionGrid = document.getElementById('condition-grid');
   CONDITIONS.forEach(function(name){
     var slug = name.toLowerCase().normalize('NFD').replace(new RegExp('[̀-ͯ]','g'),'').replace(/\s+/g,'_');
@@ -1300,6 +1665,21 @@
     label.className = 'condition-chip';
     label.innerHTML = '<input type="checkbox" data-path="condicoes.'+slug+'" class="condition-checkbox" data-name="'+name+'"><span>'+name+'</span>';
     conditionGrid.appendChild(label);
+    var condInfoBtn = document.createElement('button');
+    condInfoBtn.type = 'button'; condInfoBtn.className = 'small'; condInfoBtn.title = 'Ver descrição da condição';
+    condInfoBtn.textContent = 'ℹ️';
+    condInfoBtn.style.marginLeft = '4px';
+    var condDetailBox = null;
+    condInfoBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      if(condDetailBox){ condDetailBox.remove(); condDetailBox = null; return; }
+      var descricao = lookupCondicaoRefByLabel(name);
+      condDetailBox = document.createElement('div');
+      condDetailBox.className = 'compendio-detail-box';
+      condDetailBox.textContent = descricao || 'Sem descrição importada ainda pra essa condição — importe o JSON de referência no Compêndio.';
+      label.appendChild(condDetailBox);
+    });
+    label.appendChild(condInfoBtn);
   });
 
   var CONDITION_EFFECTS = {
