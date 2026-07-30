@@ -662,7 +662,14 @@
   <section class="panel" id="panel-compendio">
     <div class="section-title">Compêndio de Magias <span class="hint">privado da sua conta — dados e cálculos, sem copiar texto de livro nenhum publicamente</span></div>
     <div class="row-flex" style="margin-bottom:10px; align-items:center;">
-      <input type="text" id="compendio-magias-search" placeholder="Buscar por nome..." style="max-width:260px;">
+      <input type="text" id="compendio-magias-search" placeholder="Buscar por nome..." style="max-width:220px;">
+      <select id="compendio-magias-filter-tipo" style="max-width:140px;">
+        <option value="">Todos os tipos</option>
+        <option value="Arcana">Só Arcana</option>
+        <option value="Divina">Só Divina</option>
+        <option value="Universal">Só Universal</option>
+      </select>
+      <input type="number" id="compendio-magias-filter-circulo" placeholder="Círc. máx." style="max-width:100px;">
       <button class="small" id="import-wiki-magias">Importar todas da Tormenta Fandom Wiki</button>
       <button class="small" id="import-json-magias">Importar JSON (arquivo local)</button>
       <input type="file" id="compendio-magias-json-file" accept="application/json" style="display:none">
@@ -1096,8 +1103,29 @@
       });
     });
   }
-  filterCompendioTable(document.getElementById('compendio-magias-search'), compendioMagiasBody);
   filterCompendioTable(document.getElementById('compendio-poderes-search'), compendioPoderesBody);
+
+  function applyMagiasFilter(){
+    var q = normalizeSearch(document.getElementById('compendio-magias-search').value.trim());
+    var tipoFiltro = document.getElementById('compendio-magias-filter-tipo').value;
+    var circMaxRaw = document.getElementById('compendio-magias-filter-circulo').value;
+    var circMax = circMaxRaw === '' ? null : parseInt(circMaxRaw, 10);
+    Array.prototype.forEach.call(compendioMagiasBody.children, function(tr){
+      var nomeInput = tr.querySelector('[data-field="nome"]');
+      var tipoInput = tr.querySelector('[data-field="tipo"]');
+      var circuloInput = tr.querySelector('[data-field="circulo"]');
+      var nomeText = nomeInput ? normalizeSearch(nomeInput.value) : '';
+      var matchNome = !q || nomeText.indexOf(q) > -1;
+      var matchTipo = !tipoFiltro || (tipoInput && tipoInput.value === tipoFiltro);
+      var circVal = circuloInput ? parseInt(circuloInput.value, 10) : NaN;
+      var matchCirculo = (circMax === null) || isNaN(circVal) || circVal <= circMax;
+      tr.style.display = (matchNome && matchTipo && matchCirculo) ? '' : 'none';
+    });
+  }
+  ['compendio-magias-search','compendio-magias-filter-tipo','compendio-magias-filter-circulo'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el){ el.addEventListener('input', applyMagiasFilter); el.addEventListener('change', applyMagiasFilter); }
+  });
 
   function wikiPageUrl(title){
     return 'https://tormenta.fandom.com/pt/wiki/' + encodeURIComponent(title.replace(/ /g, '_'));
