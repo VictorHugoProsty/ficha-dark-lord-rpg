@@ -1034,13 +1034,16 @@
   document.addEventListener('input', function(e){ if(e.target.closest('#panel-compendio')) scheduleCompendioSave(); });
   document.addEventListener('change', function(e){ if(e.target.closest('#panel-compendio')) scheduleCompendioSave(); });
 
+  function normalizeSearch(s){
+    return (s||'').toLowerCase().normalize('NFD').replace(new RegExp('[̀-ͯ]','g'),'');
+  }
   function filterCompendioTable(searchInput, tbody){
     if(!searchInput) return;
     searchInput.addEventListener('input', function(){
-      var q = searchInput.value.trim().toLowerCase();
+      var q = normalizeSearch(searchInput.value.trim());
       Array.prototype.forEach.call(tbody.children, function(tr){
         var nomeInput = tr.querySelector('[data-field="nome"]');
-        var text = nomeInput ? nomeInput.value.toLowerCase() : '';
+        var text = nomeInput ? normalizeSearch(nomeInput.value) : '';
         tr.style.display = (!q || text.indexOf(q) > -1) ? '' : 'none';
       });
     });
@@ -1061,6 +1064,7 @@
         var nomeInput = tr.querySelector('[data-field="nome"]');
         if(nomeInput) existing[nomeInput.value.trim().toLowerCase()] = true;
       });
+      var added = 0;
       members.forEach(function(m){
         var nome = m.title;
         var key = nome.trim().toLowerCase();
@@ -1069,8 +1073,9 @@
           {nome:nome, circulo:'', tipo:tipo, pm:'', link:wikiPageUrl(nome)},
           {afterCreate:enhanceCompendioMagiaRow});
         existing[key] = true;
+        added++;
       });
-      return members.length;
+      return {found: members.length, added: added};
     });
   }
   var importWikiBtn = document.getElementById('import-wiki-magias');
@@ -1082,10 +1087,14 @@
       Promise.all([
         importWikiCategory('Categoria:Magias_Arcanas', 'Arcana'),
         importWikiCategory('Categoria:Magias_Divinas', 'Divina')
-      ]).then(function(counts){
+      ]).then(function(results){
         scheduleCompendioSave();
         importWikiBtn.disabled = false;
-        statusEl.textContent = counts[0]+counts[1]+' magias importadas (arcanas: '+counts[0]+', divinas: '+counts[1]+').';
+        var totalAdded = results[0].added + results[1].added;
+        var totalFound = results[0].found + results[1].found;
+        var skipped = totalFound - totalAdded;
+        statusEl.textContent = totalAdded+' magias novas importadas (arcanas: '+results[0].added+', divinas: '+results[1].added+')'
+          + (skipped>0 ? ', '+skipped+' já estavam no compêndio.' : '.');
       }).catch(function(){
         importWikiBtn.disabled = false;
         statusEl.textContent = 'Não consegui buscar agora — tente de novo em alguns segundos.';
