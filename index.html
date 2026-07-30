@@ -673,6 +673,7 @@
       <button class="small" id="import-wiki-magias">Importar todas da Tormenta Fandom Wiki</button>
       <button class="small" id="import-json-magias">Importar JSON (arquivo local)</button>
       <input type="file" id="compendio-magias-json-file" accept="application/json" style="display:none">
+      <button class="small remove-btn" id="clean-magias-sem-dados">Remover magias sem dados do JSON</button>
       <span class="hint" id="import-wiki-status"></span>
     </div>
     <div class="table-wrap">
@@ -1255,6 +1256,22 @@
       };
       reader.readAsText(file);
       e.target.value = '';
+    });
+  }
+
+  var cleanMagiasBtn = document.getElementById('clean-magias-sem-dados');
+  if(cleanMagiasBtn){
+    cleanMagiasBtn.addEventListener('click', function(){
+      var semDados = Array.prototype.filter.call(compendioMagiasBody.children, function(tr){
+        var circulo = tr.querySelector('[data-field="circulo"]');
+        var pm = tr.querySelector('[data-field="pm"]');
+        return (!circulo || !circulo.value) && (!pm || !pm.value);
+      });
+      if(semDados.length === 0){ document.getElementById('import-wiki-status').textContent = 'Não achei nenhuma magia sem dados pra remover.'; return; }
+      if(!confirm('Isso vai remover '+semDados.length+' magias sem círculo/PM preenchidos, deixando só as que têm dados completos. Continuar?')) return;
+      semDados.forEach(function(tr){ tr.remove(); });
+      scheduleCompendioSave();
+      document.getElementById('import-wiki-status').textContent = semDados.length+' magias sem dados removidas.';
     });
   }
 
